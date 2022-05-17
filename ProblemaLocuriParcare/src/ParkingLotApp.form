@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="ParkingLotApp">
+  <grid id="27dc6" binding="panel_main" layout-manager="GridLayoutManager" row-count="8" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="20" y="20" width="495" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="e0433" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Name"/>
+        </properties>
+      </component>
+      <component id="f6683" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Vehicle"/>
+        </properties>
+      </component>
+      <component id="c6c3" class="javax.swing.JComboBox" binding="comboBox_vehicle">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="9" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <model>
+            <item value="Motorcycle"/>
+            <item value="Car"/>
+            <item value="Truck"/>
+          </model>
+        </properties>
+      </component>
+      <component id="c0727" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="7" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="VIP"/>
+        </properties>
+      </component>
+      <component id="b3e26" class="javax.swing.JComboBox" binding="comboBox_vip">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="8" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <model>
+            <item value="Yes"/>
+            <item value="No"/>
+          </model>
+        </properties>
+      </component>
+      <component id="d12a" class="javax.swing.JButton" binding="button_getTicket">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="9" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Get Ticket"/>
+        </properties>
+      </component>
+      <component id="944b8" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="3" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="ID parking spot"/>
+        </properties>
+      </component>
+      <component id="a94f9" class="javax.swing.JTextField" binding="textField_idParkingSpot">
+        <constraints>
+          <grid row="1" column="5" row-span="1" col-span="4" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="547ca" class="javax.swing.JButton" binding="button_leaveParkingLot">
+        <constraints>
+          <grid row="2" column="6" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Leave Parking Lot"/>
+        </properties>
+      </component>
+      <component id="d05f" class="javax.swing.JButton" binding="button_showVehicles">
+        <constraints>
+          <grid row="4" column="7" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Show vehicles in parking lot"/>
+        </properties>
+      </component>
+      <component id="de40b" class="javax.swing.JTextField" binding="textField_name">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <scrollpane id="5937b" binding="scroll">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="9" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="9b604" class="javax.swing.JTextArea" binding="textArea_info">
+            <constraints/>
+            <properties>
+              <lineWrap value="true"/>
+              <wrapStyleWord value="true"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+    </children>
+  </grid>
+</form>
