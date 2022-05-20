@@ -1,0 +1,10 @@
+2 3 4
+electric
+nonelectric
+nonelectric
+nonelectric
+electric
+electric
+electric
+nonelectric
+electric

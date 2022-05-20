@@ -14,39 +14,44 @@ public class ParkingLotApp
     private JButton button_showVehicles;
     private JTextField textField_name;
     private JScrollPane scroll;
-
+    private JTextField textField_culoare;
+    private JTextField textField_pret;
+    private JComboBox comboBox_electric;
     private ParkingLot parkingLot;
 
     public ParkingLotApp()
     {
-        parkingLot = new ParkingLot(2, 3, 4);
+        parkingLot = new ParkingLot();
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e)
             {
                 String name = textField_name.getText();
-                String vehicle = comboBox_vehicle.getSelectedItem().toString();
+                String vehicleType = comboBox_vehicle.getSelectedItem().toString();
                 String vip = comboBox_vip.getSelectedItem().toString();
+                String color = textField_culoare.getText();
+                String electric = comboBox_electric.getSelectedItem().toString();
+                int price = Integer.parseInt(textField_pret.getText());
 
-                VehicleType vehicleType = VehicleType.Car;
-                switch(vehicle)
+                boolean isElectric = false;
+                if(electric == "Yes")
+                    isElectric = true;
+
+                Vehicle vehicle = null;
+                switch(vehicleType)
                 {
-                    case "Motorcycle": vehicleType = VehicleType.Motorcycle; break;
-                    case "Car": vehicleType = VehicleType.Car; break;
-                    case "Truck": vehicleType = VehicleType.Truck; break;
+                    case "Motorcycle": vehicle = new Motorcycle(color, price, isElectric); break;
+                    case "Car": vehicle = new Car(color, price, isElectric); break;
+                    case "Truck": vehicle = new Truck(color, price, isElectric); break;
                     default: break;
                 }
 
                 boolean vipStatus = false;
-                switch(vip)
-                {
-                    case "Yes": vipStatus = true; break;
-                    case "No": vipStatus = false; break;
-                    default: break;
-                }
+                if(vip == "Yes")
+                    vipStatus = true;
 
-                Driver d = new Driver(name, vehicleType, vipStatus);
+                Driver d = new Driver(name, vehicle, vipStatus);
                 String text = parkingLot.getParkingTicket(d);
                 textArea_info.append(text + "\r\n");
             }

@@ -1,31 +1,34 @@
 public class Driver
 {
     private String name;
-    private VehicleType vehicleType;
+    private Vehicle vehicle;
     private boolean vipStatus;
 
-    public Driver(String name, VehicleType vehicleType, boolean vipStatus)
+    public Driver(String name, Vehicle vehicle, boolean vipStatus)
     {
         this.name = name;
-        this.vehicleType = vehicleType;
+        this.vehicle = vehicle;
         this.vipStatus = vipStatus;
     }
 
     public String getName() { return name; }
-    public VehicleType getVehicleType() { return vehicleType; }
+    public Vehicle getVehicle() { return vehicle; }
     public boolean getVipStatus() { return vipStatus; }
-    public void setName(String name) { this.name = name; }
-    public void setVehicleType(VehicleType vehicleType) { this.vehicleType = vehicleType; }
-    public void setVipStatus(boolean vipStatus) { this.vipStatus = vipStatus; }
 
     @Override
     public String toString()
     {
-        String str = "(" + getName() + ", " + getVehicleType() + ", ";
+        String str = "(" + getName() + ", " + getVehicle().getDescription() + ", ";
+
         if(getVipStatus() == true)
-            str += "VIP)";
+            str += "VIP, ";
         else
-            str += "NonVIP)";
+            str += "NonVIP, ";
+
+        if(vehicle.isElectric())
+            str += "Electric vehicle)";
+        else
+            str += "Non-electric vehicle)";
 
         return str;
     }

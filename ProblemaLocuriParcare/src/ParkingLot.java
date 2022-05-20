@@ -1,93 +1,140 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.util.Scanner;
 
 public class ParkingLot
 {
-    private final int smallDimension;
-    private final int mediumDimension;
-    private final int largeDimension;
-    private PriorityQueue<Integer>[] parkingSpots;
+    private ArrayList<Integer> dimensions;
+    private ArrayList<Integer> nrEmptySpots;
+    private ArrayList<ParkingSpot> parkingSpots;
+
     private HashMap<Integer, Driver> drivers;
 
-    public ParkingLot(int smallDimension, int mediumDimension, int largeDimension)
+    // Constants
+    public static final int SMALL_SPOT_ID = 0;
+    public static final int MEDIUM_SPOT_ID = 1;
+    public static final int LARGE_SPOT_ID = 2;
+
+    public ParkingLot()
     {
-        this.smallDimension = smallDimension;
-        this.mediumDimension = mediumDimension;
-        this.largeDimension = largeDimension;
 
-        parkingSpots = new PriorityQueue[3];
-        parkingSpots[0] = new PriorityQueue<Integer>(smallDimension);
-        parkingSpots[1] = new PriorityQueue<Integer>(mediumDimension);
-        parkingSpots[2] = new PriorityQueue<Integer>(largeDimension);
+
+        dimensions = new ArrayList<Integer>(3);
+        nrEmptySpots = new ArrayList<Integer>(3);
+
+        readInputFromFile();
+
         drivers = new HashMap<Integer, Driver>();
-
-        // Initially, all the spots from the parking lot are empty
-        // Small -> [0, smallDimension - 1]
-        // Medium -> [smallDimension, smallDimension + mediumDimension - 1]
-        // Large -> [smallDimension + mediumDimension, smallDimension + mediumDimension + largeDimension - 1]
-        for(int i = 0; i < smallDimension; ++i)
-            parkingSpots[0].add(i);
-        for(int i = smallDimension; i < smallDimension + mediumDimension; ++i)
-            parkingSpots[1].add(i);
-        for(int i = smallDimension + mediumDimension; i < smallDimension + mediumDimension + largeDimension; ++i)
-            parkingSpots[2].add(i);
     }
 
-    // INSERT ( O(log n) )
+    public void readInputFromFile()
+    {
+        try
+        {
+            File file = new File("C:\\Users\\robertcur\\Desktop\\IntelliJ - Projects\\Parking-Lot-Problem\\ProblemaLocuriParcare\\input.txt");
+            Scanner fileReader = new Scanner(file);
+
+            // If the file contains the dimensions (first line)
+            if(fileReader.hasNextLine())
+            {
+                String line = fileReader.nextLine();
+                String[] aux = line.split(" ");
+
+                int smallDimension = Integer.parseInt(aux[0]);
+                int mediumDimension = Integer.parseInt(aux[1]);
+                int largeDimension = Integer.parseInt(aux[2]);
+
+                // Set dimensions
+                dimensions.add(smallDimension);
+                dimensions.add(mediumDimension);
+                dimensions.add(largeDimension);
+
+                // Initially, all spots are empty
+                for(int i = 0; i < dimensions.size(); ++i)
+                    nrEmptySpots.add(dimensions.get(i));
+
+                parkingSpots = new ArrayList<ParkingSpot>(dimensions.get(0) + dimensions.get(1) + dimensions.get(2));
+
+                try
+                {
+                    for(int i = 0; i < dimensions.get(0) + dimensions.get(1) + dimensions.get(2); ++i)
+                    {
+                        line = fileReader.nextLine();
+                        if(line.equals("electric"))
+                            parkingSpots.add(new ParkingSpot(i, true, true));
+                        else if(line.equals("nonelectric"))
+                            parkingSpots.add(new ParkingSpot(i, true, false));
+                        else
+                        {
+                            System.out.println("Incorrect input in file!");
+                            System.out.println(line);
+                            return;
+                        }
+
+                    }
+                }
+                catch(Exception e)
+                {
+                    System.out.println("Not enough lines in file!");
+                    e.printStackTrace();
+                }
+
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("An error occured while opening the file!");
+            e.printStackTrace();
+        }
+    }
+
     public String getParkingTicket(Driver d)
     {
         String ans = "-";
 
         // Check if the driver is VIP
         boolean isVIP = d.getVipStatus();
+        int vehicleTypeId = d.getVehicle().getType();
+        boolean isElectric = d.getVehicle().isElectric();
 
-        // Check if there is any spot left in the driver's category (in minheap we store the id of the empty spots)
-        int vehicleTypeId = d.getVehicleType().ordinal();
-        if(parkingSpots[vehicleTypeId].size() != 0)        // We have an empty spot for this driver
+
+        int idSpot = findEmptySpot(vehicleTypeId, isElectric);
+
+        // S-a gasit un loc liber la categoria corespunzatoare masinii
+        if(idSpot != -1)
         {
-            try
-            {
-                Integer idSpot = parkingSpots[vehicleTypeId].peek();
-                parkingSpots[vehicleTypeId].poll();
+            // Asignam locul de parcare unui sofer
+            drivers.put(idSpot, d);
 
-                // Add the driver in the hashMap in order to map him to the id of the parking spot
-                drivers.put(idSpot, d);
-
-
-                ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot.toString();
-            }
-            catch(Exception e)
-            {
-                System.out.println(e.getMessage());
-            }
-
+            ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot;
         }
-        else        // There is no empty spot in this category. If the driver is VIP, we will check in the upper category
+        else
         {
-            if(isVIP && vehicleTypeId < 2)
+            // Nu s-a gasit un loc liber la categoria corespunzatoare masinii
+            if(isVIP && vehicleTypeId < LARGE_SPOT_ID)
             {
+                // Putem cauta un loc la o categorie superioara
                 ++vehicleTypeId;
-                boolean foundSpot = false;
-
-                while(vehicleTypeId < 3 && !foundSpot)
+                while(vehicleTypeId <= LARGE_SPOT_ID && idSpot == -1)
                 {
-                    if(parkingSpots[vehicleTypeId].size() != 0)
-                    {
-                        Integer idSpot = parkingSpots[vehicleTypeId].peek();
-                        parkingSpots[vehicleTypeId].poll();
+                    idSpot = findEmptySpot(vehicleTypeId, isElectric);
 
-                        // Add the driver in the hashMap in order to map him to the id of the parking spot
-                        drivers.put(idSpot, d);
-
-                        ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot.toString();
-                        foundSpot = true;
-                    }
                     ++vehicleTypeId;
                 }
 
-                if(!foundSpot)
+                if(idSpot == -1) // Nu s-a gasit un loc de parcare
                     ans = "The driver " + d.toString() + " does not have an empty parking spot!";
+                else
+                {
+                    // Asignam locul de parcare unui sofer
+                    drivers.put(idSpot, d);
+
+                    ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot;
+                }
             }
             else
             {
@@ -98,27 +145,80 @@ public class ParkingLot
         return ans;
     }
 
-    // DELETE ( O(log n) )
+
+    int findEmptySpot(int vehicleTypeId, boolean isElectric)
+    {
+        int n = dimensions.get(vehicleTypeId);
+        int spot = -1;
+        int startIndex = 0;
+        int endIndex = 0;
+
+        for(int i = 1; i <= vehicleTypeId; ++i)
+            startIndex += dimensions.get(i - 1);
+
+        endIndex = startIndex + n;
+
+        for(int i = startIndex; i < endIndex ; ++i)
+        {
+            if(parkingSpots.get(i).isFree())
+            {
+                if(isElectric) // Masina este electrica
+                {
+                    if(parkingSpots.get(i).hasElectricCharger()) // Locul de parcare are charger
+                    {
+                        // S-a ocupat locul de parcare
+                        parkingSpots.get(i).setFree(false);
+
+                        // Scadem nr de locuri libere disponibile
+                        nrEmptySpots.set(vehicleTypeId, nrEmptySpots.get(vehicleTypeId) - 1);
+
+                        // Salvam id-ul locului de parcare
+                        spot = i;
+
+                        break;
+                    }
+                }
+                else // Masina nu este electrica
+                {
+                    if(!parkingSpots.get(i).hasElectricCharger()) // Locul de parcare nu are charger
+                    {
+                        // S-a ocupat locul de parcare
+                        parkingSpots.get(i).setFree(false);
+
+                        // Scadem nr de locuri libere disponibile
+                        nrEmptySpots.set(vehicleTypeId, nrEmptySpots.get(vehicleTypeId) - 1);
+
+                        // Salvam id-ul locului de parcare
+                        spot = i;
+
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        return spot;
+    }
+
+
     public String leaveParkingLot(Integer idParkingSpot)
     {
         if(!drivers.containsKey(idParkingSpot))
             return "Locul cu id-ul " + idParkingSpot.toString() + " nu este ocupat!";
 
-        String ans = "-";
+        // S-a eliberat un loc de parcare
+        parkingSpots.get(idParkingSpot).setFree(true);
 
-        // Add the place that has been freed
-        if(idParkingSpot >= 0 && idParkingSpot < smallDimension)
-            parkingSpots[0].add(idParkingSpot);
-        else if(idParkingSpot >= smallDimension && idParkingSpot < smallDimension + mediumDimension)
-            parkingSpots[1].add(idParkingSpot);
-        else if(idParkingSpot >= smallDimension + mediumDimension && idParkingSpot < smallDimension + mediumDimension + largeDimension)
-            parkingSpots[2].add(idParkingSpot);
+        // Incrementam nr de locuri libere pt categoria specifica
+        int currentlyEmptySpots = nrEmptySpots.get(ParkingSpotType.getParkingSpotType(idParkingSpot, dimensions));
+        nrEmptySpots.set(ParkingSpotType.getParkingSpotType(idParkingSpot, dimensions), currentlyEmptySpots + 1);
 
+        // Scoatem locul din lista de locuri de parcare asignate soferilor
         Driver dr = drivers.get(idParkingSpot);
         drivers.remove(idParkingSpot);
-        ans = "The driver: " + dr.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")";
 
-        return ans;
+        return "The driver: " + dr.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")";
     }
 
     public String showOccupiedSpots()
@@ -132,9 +232,9 @@ public class ParkingLot
 
         ans.append("\r\n");
         ans.append("-----> Number of free parking spots left: \r\n");
-        ans.append("Motorcycle: ").append(parkingSpots[0].size()).append(" free spots.\r\n");
-        ans.append("Car: ").append(parkingSpots[1].size()).append(" free spots.\r\n");
-        ans.append("Truck: ").append(parkingSpots[2].size()).append(" free spots.\r\n");
+        ans.append("Motorcycle: ").append(nrEmptySpots.get(0)).append(" free spots.\r\n");
+        ans.append("Car: ").append(nrEmptySpots.get(1)).append(" free spots.\r\n");
+        ans.append("Truck: ").append(nrEmptySpots.get(2)).append(" free spots.\r\n");
 
         return ans.toString();
     }
