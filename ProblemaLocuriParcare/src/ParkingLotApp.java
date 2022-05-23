@@ -1,3 +1,10 @@
+import Parking.Driver;
+import Parking.ParkingLot;
+import Vehicles.Car;
+import Vehicles.Motorcycle;
+import Vehicles.Truck;
+import Vehicles.Vehicle;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +24,7 @@ public class ParkingLotApp
     private JTextField textField_culoare;
     private JTextField textField_pret;
     private JComboBox comboBox_electric;
+    private JButton button_showAllParkingSpots;
     private ParkingLot parkingLot;
 
     public ParkingLotApp()
@@ -32,7 +40,17 @@ public class ParkingLotApp
                 String vip = comboBox_vip.getSelectedItem().toString();
                 String color = textField_culoare.getText();
                 String electric = comboBox_electric.getSelectedItem().toString();
-                int price = Integer.parseInt(textField_pret.getText());
+
+                int price = 0;
+                try
+                {
+                    price = Integer.parseInt(textField_pret.getText());
+                }
+                catch(Exception ex)
+                {
+                    System.out.println("Trebuie sa introduceti un numar in campul Pret! -> Error: " + ex.toString());
+                }
+
 
                 boolean isElectric = false;
                 if(electric == "Yes")
@@ -79,6 +97,13 @@ public class ParkingLotApp
                 textArea_info.append("\r\n--------------------\r\n");
             }
         });
+
+        button_showAllParkingSpots.addActionListener(e -> {
+            textArea_info.append("\r\n--------------------");
+            String text = parkingLot.showAllParkingSpots();
+            textArea_info.append(text);
+            textArea_info.append("\r\n--------------------\r\n");
+        });
     }
 
     public static void main(String[] args)
@@ -112,10 +137,10 @@ public class ParkingLotApp
     Minheaps have O(log n) complexity for both insertion and deletion.
     - We will use MinHeaps to model each category of parking lots (small, medium large). These MinHeaps will contain the
     id(index) of the free parking spots.
-    - We will also use a HashMap that maps the parking spot id to the Driver that occupies it.
+    - We will also use a HashMap that maps the parking spot id to the Parking.Driver that occupies it.
 
-    - We will have a class that represents a Driver (String name, VehicleType vehicleType, boolean vipStatus)
-    - We will also have a class ParkingLot that has the minheaps and the hashmap as attributes. It will also have the insertion
+    - We will have a class that represents a Parking.Driver (String name, Vehicles.VehicleType vehicleType, boolean vipStatus)
+    - We will also have a class Parking.ParkingLot that has the minheaps and the hashmap as attributes. It will also have the insertion
     and deletion methods.
     - We will use an Enumeration to map the vehicleType to an integer.
  */

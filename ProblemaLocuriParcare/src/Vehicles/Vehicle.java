@@ -1,3 +1,5 @@
+package Vehicles;
+
 public abstract class Vehicle
 {
     protected int type;

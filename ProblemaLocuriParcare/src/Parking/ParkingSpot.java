@@ -1,3 +1,5 @@
+package Parking;
+
 public class ParkingSpot
 {
     private int id;
@@ -18,4 +20,11 @@ public class ParkingSpot
     public void setId(int id) { this.id = id; }
     public void setFree(boolean free) { this.free = free; }
     public void setElectric(boolean electric) { this.electric = electric; }
+
+    @Override
+    public String toString()
+    {
+        return "Spot with id: " + id + " -> free: " + free + ", electric: " + electric;
+    }
+
 }

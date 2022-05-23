@@ -1,3 +1,7 @@
+package Parking;
+
+import Vehicles.Vehicle;
+
 public class Driver
 {
     private String name;

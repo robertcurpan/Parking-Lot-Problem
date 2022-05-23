@@ -1,8 +1,10 @@
+package Vehicles;
+
 public class Car extends Vehicle
 {
     public Car(String color, int price, boolean electric)
     {
-        super(1, color, price, electric);
+        super(VehicleType.Car.ordinal(), color, price, electric);
     }
 
     @Override

@@ -1,9 +1,11 @@
+package Vehicles;
+
 public class Motorcycle extends Vehicle
 {
 
     public Motorcycle(String color, int price, boolean electric)
     {
-        super(0, color, price, electric);
+        super(VehicleType.Motorcycle.ordinal(), color, price, electric);
     }
 
     @Override
