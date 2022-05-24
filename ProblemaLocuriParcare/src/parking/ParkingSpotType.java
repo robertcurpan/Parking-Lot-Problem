@@ -1,6 +1,4 @@
-package Parking;
-
-import java.util.ArrayList;
+package parking;
 
 public enum ParkingSpotType
 {

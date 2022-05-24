@@ -1,11 +1,12 @@
-package Parking;
+package parking;
 
-import Parking.Driver;
-import Strategy.*;
-import Vehicles.VehicleType;
+import exceptions.ParkingSpotNotFoundException;
+import strategy.*;
+import structures.FileInputs;
+import structures.ParkingSpotIdAndVehicleTypeId;
+import vehicles.VehicleType;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -18,7 +19,7 @@ public class ParkingLot
 
     private HashMap<Integer, Driver> drivers;
 
-    private TicketGenerator strategy;
+    private TicketGenerator ticketGenerator;
 
     public ParkingLot()
     {
@@ -26,16 +27,6 @@ public class ParkingLot
         dimensions = new ArrayList<Integer>(nrVehicleTypes);
         nrEmptySpots = new ArrayList<Integer>(nrVehicleTypes);
         parkingSpots = new ArrayList[nrVehicleTypes];
-
-        try
-        {
-            readInputFromFile();
-        }
-        catch(Exception ex)
-        {
-            System.out.println(ex.toString());
-        }
-
         drivers = new HashMap<Integer, Driver>();
     }
 
@@ -48,126 +39,81 @@ public class ParkingLot
         if(isVip)
         {
             if(isElectric)
-                strategy = new VIPElectricTicketGenerator();
+                ticketGenerator = new VIPElectricTicketGenerator();
             else
-                strategy = new VIPRegularTicketGenerator();
+                ticketGenerator = new VIPRegularTicketGenerator();
         }
         else
         {
             if(isElectric)
-                strategy = new ElectricTicketGenerator();
+                ticketGenerator = new ElectricTicketGenerator();
             else
-                strategy = new RegularTicketGenerator();
+                ticketGenerator = new RegularTicketGenerator();
         }
     }
 
-    public void readInputFromFile()
+    public void setVariablesFromFileInputs(FileInputs fileInputs)
     {
-        try
-        {
-            File file = new File("C:\\Users\\robertcur\\Desktop\\IntelliJ - Projects\\Parking-Lot-Problem\\ProblemaLocuriParcare\\input.txt");
-            Scanner fileReader = new Scanner(file);
+        // Add dimensions
+        for(int i = 0; i < fileInputs.getParkingLotDimensions().size(); ++i)
+            dimensions.add(fileInputs.getParkingLotDimensions().get(i));
 
-            // If the file contains the dimensions (first line)
-            if(fileReader.hasNextLine())
+        // Initially, all spots are empty
+        for(int i = 0; i < dimensions.size(); ++i)
+        {
+            nrEmptySpots.add(dimensions.get(i));
+            parkingSpots[i] = new ArrayList<ParkingSpot>(dimensions.get(i));
+        }
+
+
+        int k = 0;
+        int j = 0;
+        int i = 0;
+        ArrayList<String> inputLines = fileInputs.getParkingLotInputLines();
+        while(k <= ParkingSpotType.Large.ordinal())
+        {
+            while(i < dimensions.get(k))
             {
-                String line = fileReader.nextLine();
-                String[] aux = line.split(" ");
+                String line = inputLines.get(j);
+                if(line.equals("electric"))
+                    parkingSpots[k].add(new ParkingSpot(j, true, true));
+                else if(line.equals("nonelectric"))
+                    parkingSpots[k].add(new ParkingSpot(j, true, false));
 
-                int nrVehicleTypes = VehicleType.values().length;
-                if(nrVehicleTypes != aux.length)
-                {
-                    System.out.println("Nr de valori de pe prima linie a fisierului nu corespunde cu numarul de tipuri de vehicule!");
-                    System.exit(1);
-                }
-
-                // Add dimensions
-                for(int i = 0; i < aux.length; ++i)
-                {
-                    dimensions.add(Integer.parseInt(aux[i]));
-                }
-
-                // Initially, all spots are empty
-                for(int i = 0; i < dimensions.size(); ++i)
-                {
-                    nrEmptySpots.add(dimensions.get(i));
-                    parkingSpots[i] = new ArrayList<ParkingSpot>(dimensions.get(i));
-                }
-
-                try
-                {
-                    int k = 0;
-                    int j = 0;
-
-                    while(k <= ParkingSpotType.Large.ordinal())
-                    {
-                        for(int i = 0; i < dimensions.get(k); ++i)
-                        {
-                            line = fileReader.nextLine();
-                            if(line.equals("electric"))
-                                parkingSpots[k].add(new ParkingSpot(j, true, true));
-                            else if(line.equals("nonelectric"))
-                                parkingSpots[k].add(new ParkingSpot(j, true, false));
-                            else
-                            {
-                                System.out.println("Incorrect input in file! (electric/nonelectric)");
-                                System.out.println(line);
-                                System.exit(2);
-                            }
-
-                            ++j;
-                        }
-
-                        ++k;
-                    }
-
-                }
-                catch(Exception e)
-                {
-                    System.out.println("Not enough input lines in file!");
-                    e.printStackTrace();
-                    System.exit(3);
-                }
-
+                ++i;
+                ++j;
             }
+
+            i = 0;
+            ++k;
         }
-        catch (Exception e)
-        {
-            System.out.println("An error occured while opening the file!");
-            e.printStackTrace();
-            System.exit(4);
-        }
+
     }
 
     public String getParkingTicket(Driver d)
     {
         String ans = "-";
         int vehicleTypeId = d.getVehicle().getType();
+        int idSpot = -1;
 
         setStrategy(d);
 
         // In urma apelului, vehicleTypeId nu mai este neaparat acelasi. Avand in vedere ca un sofer poate fi VIP, s-ar putea asigna un loc de parcare de la o categorie superioada
         // Trebuie sa folosim valoarea noua (care se actualizeaza in functia getTicket) si aici pt a actualiza nr de locuri libere.
-        ArrayList<Integer> result = strategy.getTicket(parkingSpots, vehicleTypeId);
-        int idSpot = result.get(0);
-        vehicleTypeId = result.get(1);
+        try
+        {
+            ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(parkingSpots, nrEmptySpots, drivers, d, vehicleTypeId);
+            idSpot = parkingSpotIdAndVehicleTypeId.getParkingSpotId();
+            vehicleTypeId = parkingSpotIdAndVehicleTypeId.getVehicleTypeId();
+        }
+        catch(ParkingSpotNotFoundException ex)
+        {
+            return ex.toString();
+        }
 
         // S-a gasit un loc liber la categoria corespunzatoare masinii
-        if(idSpot != -1)
-        {
-            // Asignam locul de parcare unui sofer
-            drivers.put(idSpot, d);
 
-            // Scadem nr de locuri libere disponibile
-            int currentlyEmptySpots = nrEmptySpots.get(vehicleTypeId);
-            nrEmptySpots.set(vehicleTypeId, currentlyEmptySpots - 1);
-
-            ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot;
-        }
-        else
-        {
-            ans = "The driver " + d.toString() + " does not have an empty parking spot!";
-        }
+        ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot;
 
         return ans;
     }

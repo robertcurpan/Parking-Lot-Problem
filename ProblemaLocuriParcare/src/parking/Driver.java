@@ -1,6 +1,6 @@
-package Parking;
+package parking;
 
-import Vehicles.Vehicle;
+import vehicles.Vehicle;
 
 public class Driver
 {

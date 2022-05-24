@@ -1,4 +1,4 @@
-package Parking;
+package parking;
 
 public class ParkingSpot
 {
