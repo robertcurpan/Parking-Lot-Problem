@@ -1,18 +1,11 @@
 import input.ReadInputFromFile;
 import parking.Driver;
 import parking.ParkingLot;
-import parking.ParkingSpot;
-import parking.ParkingSpotType;
-import structures.FileInputs;
 import vehicles.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 public class ParkingLotApp
 {

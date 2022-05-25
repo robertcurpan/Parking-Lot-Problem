@@ -3,7 +3,6 @@ package input;
 
 import parking.ParkingLot;
 import parking.ParkingSpot;
-import parking.ParkingSpotType;
 import structures.FileInputs;
 import vehicles.VehicleType;
 
@@ -41,7 +40,7 @@ public class ReadInputFromFile
             {
                 int k = 0;
 
-                while(k < ParkingSpotType.values().length)
+                while(k < VehicleType.values().length)
                 {
                     int currentDimension = Integer.parseInt(aux[k]);
                     for(int index = 0; index < currentDimension; ++index)
@@ -91,26 +90,26 @@ public class ReadInputFromFile
         }
 
         // Add dimensions
-        for(int index = 0; index < fileInputs.getParkingLotDimensions().size(); ++index)
+        for(VehicleType vehicleType : VehicleType.values())
         {
-            parkingLot.addNoOfExistingSpotsForVehicleType(fileInputs.getParkingLotDimensions().get(index));
+            parkingLot.addNoOfExistingSpotsForVehicleType(vehicleType, fileInputs.getParkingLotDimensions().get(vehicleType.ordinal()));
         }
 
         // Initially, all spots are empty
-        for(int index = 0; index < VehicleType.values().length; ++index)
+        for(VehicleType vehicleType : VehicleType.values())
         {
-            parkingLot.addNoOfEmptySpots(parkingLot.getNoOfExistingSpotsForVehicleType().get(index));
-            parkingLot.getParkingSpots()[index] = new ArrayList<ParkingSpot>(parkingLot.getNoOfExistingSpotsForVehicleType().get(index));
+            parkingLot.addNoOfEmptySpots(vehicleType, parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType));
+            parkingLot.getParkingSpots().put(vehicleType, new ArrayList<ParkingSpot>(parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType)));
         }
 
         // Add the actual parking spots to the collection
         int index = 0;
         ArrayList<String> inputLines = fileInputs.getParkingLotInputLines();
-        for (ParkingSpotType type :ParkingSpotType.values()) {
-            while (parkingLot.getParkingSpots()[type.ordinal()].size() < parkingLot.getNoOfExistingSpotsForVehicleType().get(type.ordinal())) {
+        for (VehicleType vehicleType :VehicleType.values()) {
+            while (parkingLot.getParkingSpots().get(vehicleType).size() < parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType)) {
                 String line = inputLines.get(index);
                 boolean electric = line.equals("electric");
-                parkingLot.getParkingSpots()[type.ordinal()].add(new ParkingSpot(index, true, electric));
+                parkingLot.getParkingSpots().get(vehicleType).add(new ParkingSpot(index, true, electric));
                 ++index;
             }
         }

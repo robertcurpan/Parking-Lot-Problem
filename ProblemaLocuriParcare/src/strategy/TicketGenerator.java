@@ -5,6 +5,7 @@ import parking.Driver;
 import parking.ParkingLot;
 import parking.ParkingSpot;
 import structures.ParkingSpotIdAndVehicleTypeId;
+import vehicles.VehicleType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,5 +15,5 @@ import java.util.Map;
 // Part of Strategy design patter
 public interface TicketGenerator
 {
-    ParkingSpotIdAndVehicleTypeId getTicket(ParkingLot parkingLot, Driver d, int vehicleTypeId) throws ParkingSpotNotFoundException;
+    ParkingSpotIdAndVehicleTypeId getTicket(ParkingLot parkingLot, Driver d, VehicleType vehicleType) throws ParkingSpotNotFoundException;
 }

@@ -1,5 +1,7 @@
 package structures;
 
+import vehicles.VehicleType;
+
 public class ParkingSpotIdAndVehicleTypeId
 {
     private int spotId;
@@ -7,8 +9,7 @@ public class ParkingSpotIdAndVehicleTypeId
 
     public ParkingSpotIdAndVehicleTypeId()
     {
-        spotId = -1;
-        vehicleTypeId = -1;
+
     }
 
     public ParkingSpotIdAndVehicleTypeId(int spotId, int vehicleTypeId)
