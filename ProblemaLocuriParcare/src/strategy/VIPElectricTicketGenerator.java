@@ -2,22 +2,25 @@ package strategy;
 
 import exceptions.ParkingSpotNotFoundException;
 import parking.Driver;
+import parking.ParkingLot;
 import parking.ParkingSpot;
 import parking.ParkingSpotType;
 import structures.ParkingSpotIdAndVehicleTypeId;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class VIPElectricTicketGenerator implements TicketGenerator
 {
     @Override
-    public ParkingSpotIdAndVehicleTypeId getTicket(ArrayList<ParkingSpot>[] parkingSpots, ArrayList<Integer> nrEmptySpots, HashMap<Integer, Driver> drivers, Driver d, int vehicleTypeId) throws ParkingSpotNotFoundException
+    public ParkingSpotIdAndVehicleTypeId getTicket(ParkingLot parkingLot, Driver d, int vehicleTypeId) throws ParkingSpotNotFoundException
     {
         int idSpot = -1;
         while(vehicleTypeId <= ParkingSpotType.Large.ordinal())
         {
-            idSpot = findEmptyElectricSpotOnCurrentCategory(parkingSpots, nrEmptySpots, drivers, d, vehicleTypeId);
+            idSpot = findEmptyElectricSpotOnCurrentCategory(parkingLot, d, vehicleTypeId);
 
             if(idSpot != -1)
                 return new ParkingSpotIdAndVehicleTypeId(idSpot, vehicleTypeId);
@@ -29,38 +32,38 @@ public class VIPElectricTicketGenerator implements TicketGenerator
         throw new ParkingSpotNotFoundException();
     }
 
-    public int findEmptyElectricSpotOnCurrentCategory(ArrayList<ParkingSpot>[] parkingSpots, ArrayList<Integer> nrEmptySpots, HashMap<Integer, Driver> drivers, Driver d, int vehicleTypeId)
+    public int findEmptyElectricSpotOnCurrentCategory(ParkingLot parkingLot, Driver d, int vehicleTypeId)
     {
-        int n = parkingSpots[vehicleTypeId].size();
+        int n = parkingLot.getParkingSpots()[vehicleTypeId].size();
         int spot = -1;
 
         for(int i = 0; i < n; ++i)
         {
-            synchronized (this)
+            if(parkingLot.getParkingSpots()[vehicleTypeId].get(i).isFree() && parkingLot.getParkingSpots()[vehicleTypeId].get(i).hasElectricCharger())
             {
-                if(parkingSpots[vehicleTypeId].get(i).isFree() && parkingSpots[vehicleTypeId].get(i).hasElectricCharger())
+                synchronized (parkingLot.getParkingSpots()[vehicleTypeId].get(i))
                 {
-                    // S-a ocupat locul de parcare
-                    parkingSpots[vehicleTypeId].get(i).setFree(false);
+                    if(parkingLot.getParkingSpots()[vehicleTypeId].get(i).isFree())
+                    {
+                        // S-a ocupat locul de parcare
+                        parkingLot.getParkingSpots()[vehicleTypeId].get(i).setFree(false);
 
-                    // Salvez id-ul locului de parcare
-                    spot = parkingSpots[vehicleTypeId].get(i).getId();
+                        // Salvez id-ul locului de parcare
+                        spot = parkingLot.getParkingSpots()[vehicleTypeId].get(i).getId();
 
-                    // Asignam locul de parcare unui sofer
-                    drivers.put(spot, d);
+                        // Asignam locul de parcare unui sofer
+                        parkingLot.assignParkingSpotToDriver(spot, d);
 
-                    // Scadem nr de locuri libere disponibile
-                    int currentlyEmptySpots = nrEmptySpots.get(vehicleTypeId);
-                    nrEmptySpots.set(vehicleTypeId, currentlyEmptySpots - 1);
+                        // Scadem nr de locuri libere disponibile
+                        parkingLot.decrementEmptySpotsNumberForVehicleType(vehicleTypeId);
 
-                    // Daca am gasit un loc, opresc cautarea
-                    break;
+                        // Daca am gasit un loc, opresc cautarea
+                        break;
+                    }
                 }
             }
-
         }
 
         return spot;
     }
-
 }

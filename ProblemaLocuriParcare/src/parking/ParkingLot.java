@@ -6,143 +6,119 @@ import structures.FileInputs;
 import structures.ParkingSpotIdAndVehicleTypeId;
 import vehicles.VehicleType;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
+import java.util.List;
+import java.util.Map;
 
-public class ParkingLot
-{
-    private ArrayList<Integer> dimensions;
-    private ArrayList<Integer> nrEmptySpots;
-    private ArrayList<ParkingSpot>[] parkingSpots;
+public class ParkingLot {
+    private List<Integer> noOfExistingSpotsForVehicleType;
+    private List<Integer> emptySpotsNumber;
+    private List<ParkingSpot>[] parkingSpots;
 
-    private HashMap<Integer, Driver> drivers;
+    private Map<Integer, Driver> assignedParkingSpots;
 
     private TicketGenerator ticketGenerator;
 
-    public ParkingLot()
-    {
-        int nrVehicleTypes = VehicleType.values().length;
-        dimensions = new ArrayList<Integer>(nrVehicleTypes);
-        nrEmptySpots = new ArrayList<Integer>(nrVehicleTypes);
-        parkingSpots = new ArrayList[nrVehicleTypes];
-        drivers = new HashMap<Integer, Driver>();
+    public ParkingLot() {
+        int noOfVehicleTypes = VehicleType.values().length;
+        noOfExistingSpotsForVehicleType = new ArrayList<Integer>(noOfVehicleTypes);
+        emptySpotsNumber = new ArrayList<Integer>(noOfVehicleTypes);
+        parkingSpots = new ArrayList[noOfVehicleTypes];
+        assignedParkingSpots = new HashMap<Integer, Driver>();
     }
 
-    public void setStrategy(Driver d)
-    {
+    public TicketGenerator getTicketGenerator(Driver driver) {
         // In functie de statutul soferului si de tipul masinii, stabilim strategia potrivita
-        boolean isVip = d.getVipStatus();
-        boolean isElectric = d.getVehicle().isElectric();
+        boolean isVip = driver.getVipStatus();
+        boolean isElectric = driver.getVehicle().isElectric();
 
-        if(isVip)
-        {
-            if(isElectric)
-                ticketGenerator = new VIPElectricTicketGenerator();
-            else
-                ticketGenerator = new VIPRegularTicketGenerator();
+        if (isVip && isElectric) {
+            return new VIPElectricTicketGenerator();
         }
-        else
-        {
-            if(isElectric)
-                ticketGenerator = new ElectricTicketGenerator();
-            else
-                ticketGenerator = new RegularTicketGenerator();
+        if (isVip && !isElectric) {
+            return new VIPRegularTicketGenerator();
         }
+        if (!isVip && isElectric) {
+            return new ElectricTicketGenerator();
+        }
+        if (!isVip && !isElectric) {
+            return new RegularTicketGenerator();
+        }
+        throw new IllegalStateException();
     }
 
-    public void setVariablesFromFileInputs(FileInputs fileInputs)
-    {
+    public void setVariablesFromFileInputs(FileInputs fileInputs) {
         // Add dimensions
-        for(int i = 0; i < fileInputs.getParkingLotDimensions().size(); ++i)
-            dimensions.add(fileInputs.getParkingLotDimensions().get(i));
+        noOfExistingSpotsForVehicleType.addAll(fileInputs.getParkingLotDimensions());
+
 
         // Initially, all spots are empty
-        for(int i = 0; i < dimensions.size(); ++i)
-        {
-            nrEmptySpots.add(dimensions.get(i));
-            parkingSpots[i] = new ArrayList<ParkingSpot>(dimensions.get(i));
+        for (int i = 0; i < noOfExistingSpotsForVehicleType.size(); ++i) {
+            emptySpotsNumber.add(noOfExistingSpotsForVehicleType.get(i));
+            parkingSpots[i] = new ArrayList<ParkingSpot>(noOfExistingSpotsForVehicleType.get(i));
         }
 
 
-        int k = 0;
-        int j = 0;
-        int i = 0;
+        int index = 0;
         ArrayList<String> inputLines = fileInputs.getParkingLotInputLines();
-        while(k <= ParkingSpotType.Large.ordinal())
-        {
-            while(i < dimensions.get(k))
-            {
-                String line = inputLines.get(j);
-                if(line.equals("electric"))
-                    parkingSpots[k].add(new ParkingSpot(j, true, true));
-                else if(line.equals("nonelectric"))
-                    parkingSpots[k].add(new ParkingSpot(j, true, false));
-
-                ++i;
-                ++j;
+        for (ParkingSpotType type :ParkingSpotType.values()) {
+            while (parkingSpots[type.ordinal()].size() < noOfExistingSpotsForVehicleType.get(type.ordinal())) {
+                String line = inputLines.get(index);
+                boolean electric = line.equals("electric");
+                parkingSpots[type.ordinal()].add(new ParkingSpot(index, true, electric));
+                ++index;
             }
-
-            i = 0;
-            ++k;
         }
 
     }
 
-    public String getParkingTicket(Driver d)
-    {
+    public String getParkingTicket(Driver driver) {
         String ans = "-";
-        int vehicleTypeId = d.getVehicle().getType();
-        int idSpot = -1;
+        int vehicleTypeId = driver.getVehicle().getType();
+        int idSpot;
 
-        setStrategy(d);
+        TicketGenerator ticketGenerator = getTicketGenerator(driver);
 
         // In urma apelului, vehicleTypeId nu mai este neaparat acelasi. Avand in vedere ca un sofer poate fi VIP, s-ar putea asigna un loc de parcare de la o categorie superioada
         // Trebuie sa folosim valoarea noua (care se actualizeaza in functia getTicket) si aici pt a actualiza nr de locuri libere.
-        try
-        {
-            ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(parkingSpots, nrEmptySpots, drivers, d, vehicleTypeId);
+        try {
+            ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(this, driver, vehicleTypeId);
             idSpot = parkingSpotIdAndVehicleTypeId.getParkingSpotId();
             vehicleTypeId = parkingSpotIdAndVehicleTypeId.getVehicleTypeId();
-        }
-        catch(ParkingSpotNotFoundException ex)
-        {
+        } catch (ParkingSpotNotFoundException ex) {
             return ex.toString();
         }
 
         // S-a gasit un loc liber la categoria corespunzatoare masinii
 
-        ans = "The driver " + d.toString() + " received the following parking slot: " + idSpot;
+        ans = "The driver " + driver.toString() + " received the following parking slot: " + idSpot;
 
         return ans;
     }
 
 
-    public String leaveParkingLot(Integer idParkingSpot)
-    {
-        if(!drivers.containsKey(idParkingSpot))
+    public String leaveParkingLot(Integer idParkingSpot) {
+        if (!assignedParkingSpots.containsKey(idParkingSpot))
             return "The spot with id: " + idParkingSpot.toString() + " is not occupied!";
 
         // Eliberam locul de parcare
         freeEmptySpot(idParkingSpot);
 
         // Scoatem locul din lista de locuri de parcare asignate soferilor
-        Driver dr = drivers.get(idParkingSpot);
-        drivers.remove(idParkingSpot);
+        Driver dr = assignedParkingSpots.get(idParkingSpot);
+        assignedParkingSpots.remove(idParkingSpot);
 
         return "The driver: " + dr.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")";
     }
 
-    public void freeEmptySpot(Integer idParkingSpot)
-    {
+    public void freeEmptySpot(Integer idParkingSpot) {
         ArrayList<Integer> typeAndIndex = new ArrayList<Integer>();
 
         int sum = 0;
         int vehicleTypeId = 0;
-        while(sum + dimensions.get(vehicleTypeId) <= idParkingSpot)
-        {
-            sum += dimensions.get(vehicleTypeId);
+        while (sum + noOfExistingSpotsForVehicleType.get(vehicleTypeId) <= idParkingSpot) {
+            sum += noOfExistingSpotsForVehicleType.get(vehicleTypeId);
             ++vehicleTypeId;
         }
 
@@ -155,37 +131,32 @@ public class ParkingLot
         parkingSpots[vehicleTypeId].get(index).setFree(true);
 
         // Incrementam nr de locuri libere pt categoria specificata
-        int currentlyEmptySpots = nrEmptySpots.get(vehicleTypeId);
-        nrEmptySpots.set(vehicleTypeId, currentlyEmptySpots + 1);
+        int currentlyEmptySpots = emptySpotsNumber.get(vehicleTypeId);
+        emptySpotsNumber.set(vehicleTypeId, currentlyEmptySpots + 1);
     }
 
 
-    public String showOccupiedSpots()
-    {
+    public String showOccupiedSpots() {
         StringBuilder ans = new StringBuilder();
         ans.append("\r\n");
-        for(HashMap.Entry<Integer, Driver> entry : drivers.entrySet())
-        {
+        for (HashMap.Entry<Integer, Driver> entry : assignedParkingSpots.entrySet()) {
             ans.append(entry.getValue().toString()).append(" -> parking slot: ").append(entry.getKey().toString()).append("\r\n");
         }
 
         ans.append("\r\n");
         ans.append("-----> Number of free parking spots left: \r\n");
-        ans.append("Motorcycle: ").append(nrEmptySpots.get(0)).append(" free spots.\r\n");
-        ans.append("Car: ").append(nrEmptySpots.get(1)).append(" free spots.\r\n");
-        ans.append("Truck: ").append(nrEmptySpots.get(2)).append(" free spots.\r\n");
+        ans.append("Motorcycle: ").append(emptySpotsNumber.get(0)).append(" free spots.\r\n");
+        ans.append("Car: ").append(emptySpotsNumber.get(1)).append(" free spots.\r\n");
+        ans.append("Truck: ").append(emptySpotsNumber.get(2)).append(" free spots.\r\n");
 
         return ans.toString();
     }
 
-    public String showAllParkingSpots()
-    {
+    public String showAllParkingSpots() {
         StringBuilder ans = new StringBuilder();
         ans.append("\r\n");
-        for(int k = 0; k < dimensions.size(); ++k)
-        {
-            for(int i = 0 ; i < parkingSpots[k].size(); ++i)
-            {
+        for (int k = 0; k < noOfExistingSpotsForVehicleType.size(); ++k) {
+            for (int i = 0; i < parkingSpots[k].size(); ++i) {
                 ans.append(parkingSpots[k].get(i).getId()).append(" -> eletric: ").append(parkingSpots[k].get(i).hasElectricCharger()).append("\r\n");
             }
         }
@@ -193,6 +164,30 @@ public class ParkingLot
         ans.append("\r\n");
 
         return ans.toString();
+    }
+
+    public void addNoOfExistingSpotsForVehicleType(int noOfExistingSpots)
+    {
+        noOfExistingSpotsForVehicleType.add(noOfExistingSpots);
+    }
+
+    public List<Integer> getNoOfExistingSpotsForVehicleType() { return noOfExistingSpotsForVehicleType; }
+
+    public void addNoOfEmptySpots(Integer noOfEmptySpots) { emptySpotsNumber.add(noOfEmptySpots); }
+
+    public List<ParkingSpot>[] getParkingSpots() { return parkingSpots; }
+
+    public List<Integer> getEmptySpotsNumber() { return emptySpotsNumber; }
+
+    public void assignParkingSpotToDriver(int parkingSpot, Driver driver)
+    {
+        assignedParkingSpots.put(parkingSpot, driver);
+    }
+
+    public void decrementEmptySpotsNumberForVehicleType(int vehicleTypeId)
+    {
+        int currentlyEmptySpots = emptySpotsNumber.get(vehicleTypeId);
+        emptySpotsNumber.set(vehicleTypeId, currentlyEmptySpots - 1);
     }
 
 }

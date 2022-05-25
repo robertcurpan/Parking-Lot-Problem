@@ -22,19 +22,10 @@ public class Driver
     @Override
     public String toString()
     {
-        String str = "(" + getName() + ", " + getVehicle().getDescription() + ", ";
+        String vipStatus = getVipStatus() ? "VIP" : "NonVIP";
+        String isElectric = vehicle.isElectric() ? "Electric vehicle" : "Non-electric vehicle";
 
-        if(getVipStatus() == true)
-            str += "VIP, ";
-        else
-            str += "NonVIP, ";
-
-        if(vehicle.isElectric())
-            str += "Electric vehicle)";
-        else
-            str += "Non-electric vehicle)";
-
-        return str;
+        return String.format("(%s, %s, %s, %s)", getName(), getVehicle().getDescription(), vipStatus, isElectric);
     }
 
 }
