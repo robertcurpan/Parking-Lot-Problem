@@ -1,6 +1,7 @@
 package parking;
 
 import exceptions.ParkingSpotNotFoundException;
+import exceptions.ParkingSpotNotOccupiedException;
 import strategy.*;
 import structures.ParkingSpotIdAndVehicleTypeId;
 import vehicles.VehicleType;
@@ -45,7 +46,8 @@ public class ParkingLot {
         throw new IllegalStateException();
     }
 
-    public String getParkingTicket(Driver driver) {
+    public int getParkingTicket(Driver driver) throws ParkingSpotNotFoundException
+    {
         String ans = "-";
         int vehicleTypeId = driver.getVehicle().getType();
         int idSpot;
@@ -54,33 +56,27 @@ public class ParkingLot {
 
         // In urma apelului, vehicleTypeId nu mai este neaparat acelasi. Avand in vedere ca un sofer poate fi VIP, s-ar putea asigna un loc de parcare de la o categorie superioada
         // Trebuie sa folosim valoarea noua (care se actualizeaza in functia getTicket) si aici pt a actualiza nr de locuri libere.
-        try {
-            ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(this, driver, VehicleType.values()[vehicleTypeId]);
-            idSpot = parkingSpotIdAndVehicleTypeId.getParkingSpotId();
-        } catch (ParkingSpotNotFoundException ex) {
-            return ex.toString();
-        }
 
-        // S-a gasit un loc liber la categoria corespunzatoare masinii
+        ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(this, driver, VehicleType.values()[vehicleTypeId]);
+        idSpot = parkingSpotIdAndVehicleTypeId.getParkingSpotId();
 
-        ans = "The driver " + driver.toString() + " received the following parking slot: " + idSpot;
-
-        return ans;
+        return idSpot;
     }
 
 
-    public String leaveParkingLot(Integer idParkingSpot) {
+    public Driver leaveParkingLot(int idParkingSpot) throws ParkingSpotNotOccupiedException
+    {
         if (!assignedParkingSpots.containsKey(idParkingSpot))
-            return "The spot with id: " + idParkingSpot.toString() + " is not occupied!";
+            throw new ParkingSpotNotOccupiedException();
 
         // Eliberam locul de parcare
         freeEmptySpot(idParkingSpot);
 
         // Scoatem locul din lista de locuri de parcare asignate soferilor
-        Driver dr = assignedParkingSpots.get(idParkingSpot);
+        Driver driver = assignedParkingSpots.get(idParkingSpot);
         assignedParkingSpots.remove(idParkingSpot);
 
-        return "The driver: " + dr.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")";
+        return driver;
     }
 
     public void freeEmptySpot(Integer idParkingSpot) {
@@ -108,39 +104,7 @@ public class ParkingLot {
         incrementEmptySpotsNumberForVehicleType(vehicleType);
     }
 
-
-    public String showOccupiedSpots() {
-        StringBuilder ans = new StringBuilder();
-        ans.append("\r\n");
-        for (HashMap.Entry<Integer, Driver> entry : assignedParkingSpots.entrySet()) {
-            ans.append(entry.getValue().toString()).append(" -> parking slot: ").append(entry.getKey().toString()).append("\r\n");
-        }
-
-        ans.append("\r\n");
-        ans.append("-----> Number of free parking spots left: \r\n");
-        ans.append("Motorcycle: ").append(emptySpotsNumber.get(VehicleType.Motorcycle)).append(" free spots.\r\n");
-        ans.append("Car: ").append(emptySpotsNumber.get(VehicleType.Car)).append(" free spots.\r\n");
-        ans.append("Truck: ").append(emptySpotsNumber.get(VehicleType.Truck)).append(" free spots.\r\n");
-
-        return ans.toString();
-    }
-
-    public String showAllParkingSpots() {
-        StringBuilder ans = new StringBuilder();
-        ans.append("\r\n");
-
-        for(VehicleType vehicleType : VehicleType.values())
-        {
-            for(ParkingSpot parkingSpot : parkingSpots.get(vehicleType))
-            {
-                ans.append(parkingSpot.getId()).append(" -> eletric: ").append(parkingSpot.hasElectricCharger()).append("\r\n");
-            }
-        }
-
-        ans.append("\r\n");
-
-        return ans.toString();
-    }
+    public Map<Integer, Driver> getAssignedParkingSpots() { return assignedParkingSpots; }
 
     public void addNoOfExistingSpotsForVehicleType(VehicleType vehicleType, int noOfExistingSpots)
     {

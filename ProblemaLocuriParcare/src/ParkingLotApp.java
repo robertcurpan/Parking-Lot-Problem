@@ -1,11 +1,15 @@
+import exceptions.ParkingSpotNotFoundException;
+import exceptions.ParkingSpotNotOccupiedException;
 import input.ReadInputFromFile;
 import parking.Driver;
 import parking.ParkingLot;
+import parking.ParkingSpot;
 import vehicles.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 public class ParkingLotApp
 {
@@ -44,7 +48,7 @@ public class ParkingLotApp
             }
             catch(Exception ex)
             {
-                textArea_info.append("Trebuie sa introduceti un numar in campul Pret! -> Error: " + ex.toString() + "\r\n");
+                textArea_info.append("You have to introduce a number in the price field! -> Error: " + ex.toString() + "\r\n");
                 return;
             }
 
@@ -73,9 +77,20 @@ public class ParkingLotApp
             if(vip == "Yes")
                 vipStatus = true;
 
-            Driver d = new Driver(name, vehicle, vipStatus);
-            String text = parkingLot.getParkingTicket(d);
-            textArea_info.append(text + "\r\n");
+            Driver driver = new Driver(name, vehicle, vipStatus);
+
+            try
+            {
+                int idSpot = parkingLot.getParkingTicket(driver);
+
+                // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
+                textArea_info.append("The driver " + driver.toString() + " received the following parking slot: " + idSpot + "\r\n");
+            }
+            catch(ParkingSpotNotFoundException ex)
+            {
+                textArea_info.append("There is no free parking spot available!\r\n");
+            }
+
         }
     }
 
@@ -99,8 +114,16 @@ public class ParkingLotApp
             public void actionPerformed(ActionEvent e)
             {
                 String idParkingSpot = textField_idParkingSpot.getText();
-                String text = parkingLot.leaveParkingLot(Integer.parseInt(idParkingSpot));
-                textArea_info.append(text + "\r\n");
+
+                try
+                {
+                    Driver driver = parkingLot.leaveParkingLot(Integer.parseInt(idParkingSpot));
+                    textArea_info.append("The driver: " + driver.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")\r\n");
+                }
+                catch(ParkingSpotNotOccupiedException ex)
+                {
+                    textArea_info.append("The spot with id: " + idParkingSpot + " is not occupied!" + "\r\n");
+                }
             }
         });
 
@@ -110,17 +133,40 @@ public class ParkingLotApp
             public void actionPerformed(ActionEvent e)
             {
                 textArea_info.append("\r\n--------------------");
-                String text = parkingLot.showOccupiedSpots();
+
+                StringBuilder ans = new StringBuilder();
+                ans.append("\r\n");
+                for (HashMap.Entry<Integer, Driver> entry : parkingLot.getAssignedParkingSpots().entrySet()) {
+                    ans.append(entry.getValue().toString()).append(" -> parking slot: ").append(entry.getKey().toString()).append("\r\n");
+                }
+                ans.append("\r\n");
+                ans.append("-----> Number of free parking spots left: \r\n");
+                ans.append("Motorcycle: ").append(parkingLot.getEmptySpotsNumber().get(VehicleType.Motorcycle)).append(" free spots.\r\n");
+                ans.append("Car: ").append(parkingLot.getEmptySpotsNumber().get(VehicleType.Car)).append(" free spots.\r\n");
+                ans.append("Truck: ").append(parkingLot.getEmptySpotsNumber().get(VehicleType.Truck)).append(" free spots.\r\n");
+                String text = ans.toString();
+
                 textArea_info.append(text);
-                textArea_info.append("\r\n--------------------\r\n");
+                textArea_info.append("--------------------\r\n");
             }
         });
 
         button_showAllParkingSpots.addActionListener(e -> {
             textArea_info.append("\r\n--------------------");
-            String text = parkingLot.showAllParkingSpots();
+
+            StringBuilder ans = new StringBuilder();
+            ans.append("\r\n");
+            for(VehicleType vehicleType : VehicleType.values())
+            {
+                for(ParkingSpot parkingSpot : parkingLot.getParkingSpots().get(vehicleType))
+                {
+                    ans.append(parkingSpot.getId()).append(" -> eletric: ").append(parkingSpot.hasElectricCharger()).append("\r\n");
+                }
+            }
+            String text = ans.toString();
+
             textArea_info.append(text);
-            textArea_info.append("\r\n--------------------\r\n");
+            textArea_info.append("--------------------\r\n");
         });
     }
 
