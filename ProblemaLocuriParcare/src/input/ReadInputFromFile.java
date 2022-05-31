@@ -1,14 +1,18 @@
 package input;
 
 
+import parking.Driver;
 import parking.ParkingLot;
 import parking.ParkingSpot;
+import parking.TicketGeneratorCreator;
 import structures.FileInputs;
 import vehicles.VehicleType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class ReadInputFromFile
@@ -76,44 +80,47 @@ public class ReadInputFromFile
         return fileInputs;
     }
 
-    public void setVariablesInParkingLot(ParkingLot parkingLot)
+    public ParkingLot initializeAndGetParkingLot()
     {
+        Map<VehicleType, Integer> noOfExistingSpotsForVehicleType = new HashMap<VehicleType, Integer>();
+        Map<VehicleType, Integer> noOfEmptySpots = new HashMap<VehicleType, Integer>();
+        Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots = new HashMap<VehicleType, ArrayList<ParkingSpot>>();
+        Map<Integer, Driver> assignedParkingSpots = new HashMap<Integer, Driver>();
+
         // Read file inputs
         FileInputs fileInputs;
-        try
-        {
+
+        try {
             fileInputs = readInputFromFile();
         }
-        catch (FileNotFoundException e)
-        {
+        catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
         // Add dimensions
-        for(VehicleType vehicleType : VehicleType.values())
-        {
-            parkingLot.addNoOfExistingSpotsForVehicleType(vehicleType, fileInputs.getParkingLotDimensions().get(vehicleType.ordinal()));
+        for(VehicleType vehicleType : VehicleType.values()) {
+            noOfExistingSpotsForVehicleType.put(vehicleType, fileInputs.getParkingLotDimensions().get(vehicleType.ordinal()));
         }
 
         // Initially, all spots are empty
-        for(VehicleType vehicleType : VehicleType.values())
-        {
-            parkingLot.addNoOfEmptySpots(vehicleType, parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType));
-            parkingLot.getParkingSpots().put(vehicleType, new ArrayList<ParkingSpot>(parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType)));
+        for(VehicleType vehicleType : VehicleType.values()) {
+            noOfEmptySpots.put(vehicleType, noOfExistingSpotsForVehicleType.get(vehicleType));
+            parkingSpots.put(vehicleType, new ArrayList<ParkingSpot>(noOfExistingSpotsForVehicleType.get(vehicleType)));
         }
 
         // Add the actual parking spots to the collection
         int index = 0;
         ArrayList<String> inputLines = fileInputs.getParkingLotInputLines();
         for (VehicleType vehicleType :VehicleType.values()) {
-            while (parkingLot.getParkingSpots().get(vehicleType).size() < parkingLot.getNoOfExistingSpotsForVehicleType().get(vehicleType)) {
+            while (parkingSpots.get(vehicleType).size() < noOfExistingSpotsForVehicleType.get(vehicleType)) {
                 String line = inputLines.get(index);
                 boolean electric = line.equals("electric");
-                parkingLot.getParkingSpots().get(vehicleType).add(new ParkingSpot(index, true, electric));
+                parkingSpots.get(vehicleType).add(new ParkingSpot(index, true, electric));
                 ++index;
             }
         }
 
+        return new ParkingLot(noOfExistingSpotsForVehicleType, noOfEmptySpots, parkingSpots, assignedParkingSpots, new TicketGeneratorCreator());
     }
 
 }

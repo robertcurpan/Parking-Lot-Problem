@@ -96,9 +96,8 @@ public class ParkingLotApp
 
     public ParkingLotApp()
     {
-        parkingLot = new ParkingLot();
         ReadInputFromFile fileReader = new ReadInputFromFile();
-        fileReader.setVariablesInParkingLot(parkingLot);
+        parkingLot = fileReader.initializeAndGetParkingLot();
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override

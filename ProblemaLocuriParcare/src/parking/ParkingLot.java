@@ -14,36 +14,17 @@ public class ParkingLot {
     private Map<VehicleType, Integer> noOfExistingSpotsForVehicleType;
     private Map<VehicleType, Integer> emptySpotsNumber;
     private Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots;
-
     private Map<Integer, Driver> assignedParkingSpots;
+    private TicketGeneratorCreator ticketGeneratorCreator;
 
     private TicketGenerator ticketGenerator;
 
-    public ParkingLot() {
-        noOfExistingSpotsForVehicleType = new HashMap<VehicleType, Integer>();
-        emptySpotsNumber = new HashMap<VehicleType, Integer>();
-        parkingSpots = new HashMap<VehicleType, ArrayList<ParkingSpot>>();
-        assignedParkingSpots = new HashMap<Integer, Driver>();
-    }
-
-    public TicketGenerator getTicketGenerator(Driver driver) {
-        // In functie de statutul soferului si de tipul masinii, stabilim strategia potrivita
-        boolean isVip = driver.getVipStatus();
-        boolean isElectric = driver.getVehicle().isElectric();
-
-        if (isVip && isElectric) {
-            return new VIPElectricTicketGenerator();
-        }
-        if (isVip && !isElectric) {
-            return new VIPRegularTicketGenerator();
-        }
-        if (!isVip && isElectric) {
-            return new ElectricTicketGenerator();
-        }
-        if (!isVip && !isElectric) {
-            return new RegularTicketGenerator();
-        }
-        throw new IllegalStateException();
+    public ParkingLot(Map<VehicleType, Integer> noOfExistingSpotsForVehicleType, Map<VehicleType, Integer> emptySpotsNumber, Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots, Map<Integer, Driver> assignedParkingSpots, TicketGeneratorCreator ticketGeneratorCreator) {
+        this.noOfExistingSpotsForVehicleType = noOfExistingSpotsForVehicleType;
+        this.emptySpotsNumber = emptySpotsNumber;
+        this.parkingSpots = parkingSpots;
+        this.assignedParkingSpots = assignedParkingSpots;
+        this.ticketGeneratorCreator = ticketGeneratorCreator;
     }
 
     public int getParkingTicket(Driver driver) throws ParkingSpotNotFoundException
@@ -52,7 +33,7 @@ public class ParkingLot {
         int vehicleTypeId = driver.getVehicle().getType();
         int idSpot;
 
-        TicketGenerator ticketGenerator = getTicketGenerator(driver);
+        TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(driver);
 
         // In urma apelului, vehicleTypeId nu mai este neaparat acelasi. Avand in vedere ca un sofer poate fi VIP, s-ar putea asigna un loc de parcare de la o categorie superioada
         // Trebuie sa folosim valoarea noua (care se actualizeaza in functia getTicket) si aici pt a actualiza nr de locuri libere.
@@ -134,6 +115,10 @@ public class ParkingLot {
     {
         int currentlyEmptySpots = emptySpotsNumber.get(vehicleType);
         emptySpotsNumber.put(vehicleType, currentlyEmptySpots + 1);
+    }
+
+    public TicketGeneratorCreator getTicketGeneratorCreator() {
+        return ticketGeneratorCreator;
     }
 
 }
