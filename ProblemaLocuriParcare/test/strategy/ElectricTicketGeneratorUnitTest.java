@@ -6,10 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import parking.Driver;
 import parking.ParkingLot;
-import parking.TicketGeneratorCreator;
-import structures.ParkingSpotIdAndVehicleTypeId;
+import structures.Ticket;
 import vehicles.Car;
-import vehicles.Motorcycle;
 import vehicles.VehicleType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,13 +19,11 @@ public class ElectricTicketGeneratorUnitTest {
 
     ParkingLot parkingLot;
     ReadInputFromFile readInputFromFile;
-    TicketGeneratorCreator ticketGeneratorCreator;
 
     @BeforeEach
     public void initializeParkingLot() {
         readInputFromFile = new ReadInputFromFile();
         parkingLot = readInputFromFile.initializeAndGetParkingLot();
-        ticketGeneratorCreator = new TicketGeneratorCreator();
     }
 
     @Test
@@ -37,15 +33,16 @@ public class ElectricTicketGeneratorUnitTest {
         when(driver.getVipStatus()).thenReturn(false);  // specificam ca driver-ul nu e VIP
         when(driver.getVehicle()).thenReturn(new Car("red", 2000, true)); // specificam ca driver-ul are o masina electrica
 
-        TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(driver);
+        // Creat obiectul manual
+        TicketGenerator ticketGenerator = new ElectricTicketGenerator();
 
 
-        ParkingSpotIdAndVehicleTypeId parkingSpotIdAndVehicleTypeId;
+        Ticket ticket;
 
         // When
-        parkingSpotIdAndVehicleTypeId = ticketGenerator.getTicket(parkingLot, driver, VehicleType.Car);
-        assertEquals(4, parkingSpotIdAndVehicleTypeId.getParkingSpotId());
-        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingLot, driver, VehicleType.Car)); // nu mai exista locuri libere pt un sofer non-vip cu masina electrica
+        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        assertEquals(4, ticket.getSpotId());
+        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingLot, driver)); // nu mai exista locuri libere pt un sofer non-vip cu masina electrica
     }
 
 }

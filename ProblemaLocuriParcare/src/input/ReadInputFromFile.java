@@ -37,16 +37,17 @@ public class ReadInputFromFile
                 System.exit(1);
             }
 
-            for(int i = 0; i < aux.length; ++i)
-                fileInputs.addLotDimension(Integer.parseInt(aux[i]));
+            for (String s : aux) {
+                fileInputs.addLotDimension(Integer.parseInt(s));
+            }
 
             try
             {
                 int k = 0;
 
-                while(k < VehicleType.values().length)
+                for (VehicleType vehicleType : VehicleType.values())
                 {
-                    int currentDimension = Integer.parseInt(aux[k]);
+                    int currentDimension = Integer.parseInt(aux[vehicleType.ordinal()]);
                     for(int index = 0; index < currentDimension; ++index)
                     {
                         line = fileReader.nextLine();
@@ -60,7 +61,6 @@ public class ReadInputFromFile
                         }
                     }
 
-                    ++k;
                 }
 
             }
@@ -120,7 +120,7 @@ public class ReadInputFromFile
             }
         }
 
-        return new ParkingLot(noOfExistingSpotsForVehicleType, noOfEmptySpots, parkingSpots, assignedParkingSpots, new TicketGeneratorCreator());
+        return new ParkingLot(noOfExistingSpotsForVehicleType, noOfEmptySpots, parkingSpots, assignedParkingSpots);
     }
 
 }

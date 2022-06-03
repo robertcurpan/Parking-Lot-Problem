@@ -1,9 +1,8 @@
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import input.ReadInputFromFile;
-import parking.Driver;
-import parking.ParkingLot;
-import parking.ParkingSpot;
+import parking.*;
+import structures.Ticket;
 import vehicles.*;
 
 import javax.swing.*;
@@ -28,6 +27,7 @@ public class ParkingLotApp
     private JComboBox comboBox_electric;
     private JButton button_showAllParkingSpots;
     private ParkingLot parkingLot;
+    private ParkingLotService parkingLotService;
 
 
     public class CustomThread extends Thread
@@ -81,10 +81,10 @@ public class ParkingLotApp
 
             try
             {
-                int idSpot = parkingLot.getParkingTicket(driver);
+                Ticket ticket = parkingLotService.getParkingTicket(parkingLot, driver);
 
                 // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
-                textArea_info.append("The driver " + driver.toString() + " received the following parking slot: " + idSpot + "\r\n");
+                textArea_info.append("The driver " + driver.toString() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
             }
             catch(ParkingSpotNotFoundException ex)
             {
@@ -98,6 +98,7 @@ public class ParkingLotApp
     {
         ReadInputFromFile fileReader = new ReadInputFromFile();
         parkingLot = fileReader.initializeAndGetParkingLot();
+        parkingLotService = new ParkingLotService(new TicketGeneratorCreator());
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override
@@ -116,7 +117,7 @@ public class ParkingLotApp
 
                 try
                 {
-                    Driver driver = parkingLot.leaveParkingLot(Integer.parseInt(idParkingSpot));
+                    Driver driver = parkingLotService.leaveParkingLot(parkingLot, Integer.parseInt(idParkingSpot));
                     textArea_info.append("The driver: " + driver.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")\r\n");
                 }
                 catch(ParkingSpotNotOccupiedException ex)

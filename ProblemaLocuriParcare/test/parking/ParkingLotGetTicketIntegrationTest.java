@@ -3,6 +3,7 @@ package parking;
 import exceptions.ParkingSpotNotFoundException;
 import input.ReadInputFromFile;
 import org.junit.jupiter.api.Test;
+import structures.Ticket;
 import vehicles.Car;
 import vehicles.Vehicle;
 
@@ -10,6 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ParkingLotGetTicketIntegrationTest
 {
+
+    public static final String COLOR = "red";
+    public static final int PRICE = 1000;
+    public static final boolean NON_ELECTRIC = false;
+    public static final String NAME = "Robert";
+    public static final boolean VIP = true;
+
     @Test
     public void getParkingTicket() throws ParkingSpotNotFoundException
     {
@@ -18,13 +26,14 @@ class ParkingLotGetTicketIntegrationTest
         // 1) Given (preconditiile testului - trebuie sa le avem ca sa putem executa testul)
         ReadInputFromFile readInputFromFile = new ReadInputFromFile();
         ParkingLot parkingLot = readInputFromFile.initializeAndGetParkingLot();
-        Vehicle vehicle = new Car("red", 1000, false);
-        Driver driver = new Driver("Robert", vehicle, true);
+        ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator());
+        Vehicle vehicle = new Car(COLOR, PRICE, NON_ELECTRIC);
+        Driver driver = new Driver(NAME, vehicle, VIP);
 
         // 2) When
-        int parkingTicket = parkingLot.getParkingTicket(driver);
+        Ticket parkingTicket = parkingLotService.getParkingTicket(parkingLot, driver);
 
         // 3) Then (asserturi)
-        assertEquals(2, parkingTicket);
+        assertEquals(2, parkingTicket.getSpotId());
     }
 }
