@@ -36,16 +36,12 @@ public class ParkingLotService {
             throw new ParkingSpotNotOccupiedException();
 
         // Eliberam locul de parcare
-        freeEmptySpot(parkingLot, idParkingSpot);
-
-        // Scoatem locul din lista de locuri de parcare asignate soferilor
-        Driver driver = parkingLot.getAssignedParkingSpots().get(idParkingSpot);
-        parkingLot.removeAssignedParkingSpot(idParkingSpot);
+        Driver driver = freeEmptySpot(parkingLot, idParkingSpot);
 
         return driver;
     }
 
-    public void freeEmptySpot(ParkingLot parkingLot, Integer idParkingSpot) {
+    public Driver freeEmptySpot(ParkingLot parkingLot, int idParkingSpot) {
         int sum = 0;
         VehicleType vehicleType = VehicleType.Motorcycle;
         for(VehicleType vehType : VehicleType.values())
@@ -63,11 +59,7 @@ public class ParkingLotService {
 
         int index = idParkingSpot - sum;
 
-        // S-a eliberat un loc de parcare
-        parkingLot.getParkingSpots().get(vehicleType).get(index).setFree(true);
-
-        // Incrementam nr de locuri libere pt categoria specificata
-        parkingLot.incrementEmptySpotsNumberForVehicleType(vehicleType);
+        return parkingLot.releaseParkingSpot(idParkingSpot, vehicleType, index);
     }
 
 }

@@ -66,4 +66,20 @@ public class ParkingLot {
 
     }
 
+    Driver releaseParkingSpot(int idParkingSpot, VehicleType vehicleType, int index) {
+        // Obtinem soferul care se afla pe locul ce va fi eliberat
+        Driver driver = getAssignedParkingSpots().get(idParkingSpot);
+
+        // Scoatem locul din lista de locuri de parcare asignate soferilor
+        removeAssignedParkingSpot(idParkingSpot);
+
+        // S-a eliberat un loc de parcare
+        getParkingSpots().get(vehicleType).get(index).setFree(true);
+
+        // Incrementam nr de locuri libere pt categoria specificata
+        incrementEmptySpotsNumberForVehicleType(vehicleType);
+
+        return driver;
+    }
+
 }

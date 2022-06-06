@@ -48,7 +48,6 @@ public class ParkingLotUnitTest {
         // Then
         verify(ticketGeneratorCreator).getTicketGenerator(driver); // verific ca atunci cand se apeleaza getParkingTicket apeleaza metoda getTicketGenerator
         verify(ticketGenerator).getTicket(parkingLot, driver);
-        assertEquals(0, ticket.getSpotId());
     }
 
     @Test

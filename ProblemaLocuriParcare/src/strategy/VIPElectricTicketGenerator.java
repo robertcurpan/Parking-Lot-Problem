@@ -7,19 +7,16 @@ import parking.ParkingSpot;
 import structures.Ticket;
 import vehicles.VehicleType;
 
-public class VIPElectricTicketGenerator implements TicketGenerator
-{
+public class VIPElectricTicketGenerator implements TicketGenerator {
     @Override
-    public Ticket getTicket(ParkingLot parkingLot, Driver driver) throws ParkingSpotNotFoundException
-    {
+    public Ticket getTicket(ParkingLot parkingLot, Driver driver) throws ParkingSpotNotFoundException {
         int vehicleTypeId = VehicleType.values()[driver.getVehicle().getType()].ordinal();
-        while(vehicleTypeId < VehicleType.values().length) {
+        while (vehicleTypeId < VehicleType.values().length) {
             try {
                 int idSpot = findEmptyElectricSpotOnCurrentCategory(parkingLot, driver, vehicleTypeId);
 
                 return new Ticket(idSpot, driver.getVehicle());
-            }
-            catch(ParkingSpotNotFoundException exception) {
+            } catch (ParkingSpotNotFoundException exception) {
                 ++vehicleTypeId;
             }
 
@@ -31,11 +28,14 @@ public class VIPElectricTicketGenerator implements TicketGenerator
 
     public int findEmptyElectricSpotOnCurrentCategory(ParkingLot parkingLot, Driver driver, int vehicleTypeId) throws ParkingSpotNotFoundException {
         VehicleType vehicleType = VehicleType.values()[vehicleTypeId];
+        if (!parkingLot.getParkingSpots().containsKey(vehicleType)) {
+            throw new ParkingSpotNotFoundException();
+        }
 
-        for(ParkingSpot parkingSpot : parkingLot.getParkingSpots().get(vehicleType)) {
-            if(parkingSpot.isFree() && parkingSpot.hasElectricCharger()) {
+        for (ParkingSpot parkingSpot : parkingLot.getParkingSpots().get(vehicleType)) {
+            if (parkingSpot.isFree() && parkingSpot.hasElectricCharger()) {
                 synchronized (parkingSpot) {
-                    if(parkingSpot.isFree()) {
+                    if (parkingSpot.isFree()) {
                         parkingLot.occupyParkingSpot(parkingSpot.getId(), driver);
 
                         // Daca am gasit un loc, opresc cautarea

@@ -13,6 +13,10 @@ public class RegularTicketGenerator implements TicketGenerator
     public Ticket getTicket(ParkingLot parkingLot, Driver driver) throws ParkingSpotNotFoundException
     {
         VehicleType vehicleType = VehicleType.values()[driver.getVehicle().getType()];
+        if(!parkingLot.getParkingSpots().containsKey(vehicleType)) {
+            throw new ParkingSpotNotFoundException();
+        }
+
         for(ParkingSpot parkingSpot : parkingLot.getParkingSpots().get(vehicleType))
         {
             if(parkingSpot.isFree() && !parkingSpot.hasElectricCharger())

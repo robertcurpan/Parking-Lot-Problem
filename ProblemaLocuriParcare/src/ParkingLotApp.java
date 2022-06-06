@@ -97,7 +97,14 @@ public class ParkingLotApp
     public ParkingLotApp()
     {
         ReadInputFromFile fileReader = new ReadInputFromFile();
-        parkingLot = fileReader.initializeAndGetParkingLot();
+
+        try {
+            parkingLot = fileReader.initializeAndGetParkingLot();
+        } catch (RuntimeException e) {
+            System.out.println(e.toString());
+            System.exit(1);
+        }
+
         parkingLotService = new ParkingLotService(new TicketGeneratorCreator());
 
         button_getTicket.addActionListener(new ActionListener() {

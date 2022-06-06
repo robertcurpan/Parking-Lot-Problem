@@ -1,10 +1,10 @@
 package input;
 
 
+import exceptions.IncorrectFileInputsException;
 import parking.Driver;
 import parking.ParkingLot;
 import parking.ParkingSpot;
-import parking.TicketGeneratorCreator;
 import structures.FileInputs;
 import vehicles.VehicleType;
 
@@ -15,73 +15,53 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class ReadInputFromFile
-{
-    public FileInputs readInputFromFile() throws FileNotFoundException
-    {
+public class ReadInputFromFile {
+    public FileInputs readInputFromFile() throws FileNotFoundException, IncorrectFileInputsException {
         FileInputs fileInputs = new FileInputs();
 
-        File file = new File("C:\\Users\\robertcur\\Desktop\\IntelliJ - Projects\\Parking-Lot-Problem\\ProblemaLocuriParcare\\input.txt");
+        File file = new File("input.txt");
         Scanner fileReader = new Scanner(file);
 
         // If the file contains the dimensions (first line)
-        if(fileReader.hasNextLine())
-        {
+        if (fileReader.hasNextLine()) {
             String line = fileReader.nextLine();
-            String[] aux = line.split(" ");
+            String[] noOfParkingSpotsForEachVehicleType = line.split(" ");
 
-            int nrVehicleTypes = VehicleType.values().length;
-            if(nrVehicleTypes != aux.length)
-            {
-                System.out.println("Nr de valori de pe prima linie a fisierului nu corespunde cu numarul de tipuri de vehicule!");
-                System.exit(1);
+            int noVehicleTypes = VehicleType.values().length;
+            if (noVehicleTypes != noOfParkingSpotsForEachVehicleType.length) {
+                throw new IncorrectFileInputsException("Nr de valori de pe prima linie a fisierului nu corespunde cu numarul de tipuri de vehicule!");
             }
 
-            for (String s : aux) {
-                fileInputs.addLotDimension(Integer.parseInt(s));
+            for (String noOfParkingSpots : noOfParkingSpotsForEachVehicleType) {
+                fileInputs.addLotDimension(Integer.parseInt(noOfParkingSpots));
             }
 
-            try
-            {
-                int k = 0;
-
-                for (VehicleType vehicleType : VehicleType.values())
-                {
-                    int currentDimension = Integer.parseInt(aux[vehicleType.ordinal()]);
-                    for(int index = 0; index < currentDimension; ++index)
-                    {
+            try {
+                for (VehicleType vehicleType : VehicleType.values()) {
+                    int noOfParkingSpots = Integer.parseInt(noOfParkingSpotsForEachVehicleType[vehicleType.ordinal()]);
+                    for (int index = 0; index < noOfParkingSpots; ++index) {
                         line = fileReader.nextLine();
-                        if(line.equals("electric") || line.equals("nonelectric"))
+                        if (line.equals("electric") || line.equals("nonelectric"))
                             fileInputs.addLotInput(line);
-                        else
-                        {
-                            System.out.println("Incorrect input in file! (electric/nonelectric)");
-                            System.out.println(line);
-                            System.exit(2);
+                        else {
+                            throw new IncorrectFileInputsException("Incorrect input in file! (electric/nonelectric)" + " -> [" + line + "]");
                         }
                     }
 
                 }
 
-            }
-            catch(Exception e)
-            {
-                System.out.println("Not enough input lines in file!");
+            } catch (Exception e) {
                 e.printStackTrace();
-                System.exit(3);
+                throw new IncorrectFileInputsException("Not enough input lines in file!");
             }
-        }
-        else
-        {
-            System.out.println("Not enough input lines in file!");
-            System.exit(3);
+        } else {
+            throw new IncorrectFileInputsException("File is empty!");
         }
 
         return fileInputs;
     }
 
-    public ParkingLot initializeAndGetParkingLot()
-    {
+    public ParkingLot initializeAndGetParkingLot() {
         Map<VehicleType, Integer> noOfExistingSpotsForVehicleType = new HashMap<VehicleType, Integer>();
         Map<VehicleType, Integer> noOfEmptySpots = new HashMap<VehicleType, Integer>();
         Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots = new HashMap<VehicleType, ArrayList<ParkingSpot>>();
@@ -92,18 +72,17 @@ public class ReadInputFromFile
 
         try {
             fileInputs = readInputFromFile();
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | IncorrectFileInputsException e) {
             throw new RuntimeException(e);
         }
 
         // Add dimensions
-        for(VehicleType vehicleType : VehicleType.values()) {
+        for (VehicleType vehicleType : VehicleType.values()) {
             noOfExistingSpotsForVehicleType.put(vehicleType, fileInputs.getParkingLotDimensions().get(vehicleType.ordinal()));
         }
 
         // Initially, all spots are empty
-        for(VehicleType vehicleType : VehicleType.values()) {
+        for (VehicleType vehicleType : VehicleType.values()) {
             noOfEmptySpots.put(vehicleType, noOfExistingSpotsForVehicleType.get(vehicleType));
             parkingSpots.put(vehicleType, new ArrayList<ParkingSpot>(noOfExistingSpotsForVehicleType.get(vehicleType)));
         }
@@ -111,7 +90,7 @@ public class ReadInputFromFile
         // Add the actual parking spots to the collection
         int index = 0;
         ArrayList<String> inputLines = fileInputs.getParkingLotInputLines();
-        for (VehicleType vehicleType :VehicleType.values()) {
+        for (VehicleType vehicleType : VehicleType.values()) {
             while (parkingSpots.get(vehicleType).size() < noOfExistingSpotsForVehicleType.get(vehicleType)) {
                 String line = inputLines.get(index);
                 boolean electric = line.equals("electric");
@@ -124,3 +103,5 @@ public class ReadInputFromFile
     }
 
 }
+
+// TODO id-ul locului de parcare ar trebui dat in fisier (nu generat automat cu variabila "index" in a doua functie)

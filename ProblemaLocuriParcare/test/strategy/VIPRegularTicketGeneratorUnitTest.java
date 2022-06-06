@@ -60,8 +60,7 @@ public class VIPRegularTicketGeneratorUnitTest {
 
         TicketGenerator ticketGenerator = new VIPRegularTicketGenerator();
 
-        Ticket ticket;
-        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        Ticket ticket = ticketGenerator.getTicket(parkingLot, driver);
         assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingLot, driver));
     }
 }
