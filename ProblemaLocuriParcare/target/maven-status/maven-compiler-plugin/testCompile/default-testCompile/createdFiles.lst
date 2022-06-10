@@ -1,0 +1,8 @@
+strategy\RegularTicketGeneratorUnitTest.class
+strategy\ElectricTicketGeneratorUnitTest.class
+strategy\VIPRegularTicketGeneratorUnitTest.class
+parking\ParkingLotGetTicketIntegrationTest.class
+parking\TicketGeneratorCreatorUnitTest.class
+parking\ParkingLotLeaveParkingIntegrationTest.class
+parking\ParkingLotUnitTest.class
+strategy\VIPElectricTicketGeneratorUnitTest.class
