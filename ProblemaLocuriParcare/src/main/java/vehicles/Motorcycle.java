@@ -5,7 +5,7 @@ public class Motorcycle extends Vehicle
 
     public Motorcycle(String color, int price, boolean electric)
     {
-        super(VehicleType.MOTORCYCLE.ordinal(), color, price, electric);
+        super(VehicleType.MOTORCYCLE, color, price, electric);
     }
 
     @Override

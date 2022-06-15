@@ -2,17 +2,18 @@ package strategy;
 
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
+import exceptions.SimultaneousOperationException;
 import parking.Driver;
 import structures.Ticket;
 import vehicles.VehicleType;
 
 public class VIPRegularTicketGenerator implements TicketGenerator {
     @Override
-    public Ticket getTicket(Driver driver) throws ParkingSpotNotFoundException {
-        int vehicleTypeId = driver.getVehicle().getType();
+    public Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Driver driver) throws ParkingSpotNotFoundException, SimultaneousOperationException {
+        int vehicleTypeId = driver.getVehicle().getType().ordinal();
         while (vehicleTypeId < VehicleType.values().length) {
             try {
-                int idParkingSpot = findEmptyNonElectricSpotOnCurrentCategory(driver, vehicleTypeId);
+                int idParkingSpot = findEmptyNonElectricSpotOnCurrentCategory(parkingSpotsCollection, driver, vehicleTypeId);
                 return new Ticket(idParkingSpot, driver.getVehicle());
             } catch (ParkingSpotNotFoundException exception) {
                 ++vehicleTypeId;
@@ -23,14 +24,12 @@ public class VIPRegularTicketGenerator implements TicketGenerator {
         throw new ParkingSpotNotFoundException();
     }
 
-    public int findEmptyNonElectricSpotOnCurrentCategory(Driver driver, int vehicleTypeId) throws ParkingSpotNotFoundException {
+    public int findEmptyNonElectricSpotOnCurrentCategory(ParkingSpotsCollection parkingSpotsCollection, Driver driver, int vehicleTypeId) throws ParkingSpotNotFoundException, SimultaneousOperationException {
         // Caut un loc de parcare liber, cu charger electric si specific vehiculului soferului
         try {
-            synchronized (ParkingSpotsCollection.class) {
-                int idParkingSpot = ParkingSpotsCollection.getParkingSpotId(VehicleType.values()[vehicleTypeId], driver.getVehicle().isElectric());
-                ParkingSpotsCollection.occupyParkingSpot(idParkingSpot, driver);
-                return idParkingSpot;
-            }
+            int idParkingSpot = parkingSpotsCollection.getParkingSpotId(VehicleType.values()[vehicleTypeId], driver.getVehicle().isElectric());
+            parkingSpotsCollection.occupyParkingSpot(idParkingSpot, driver);
+            return idParkingSpot;
         } catch (RuntimeException ex) {
             throw new ParkingSpotNotFoundException();
         }

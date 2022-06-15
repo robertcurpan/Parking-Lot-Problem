@@ -1,6 +1,8 @@
 package parking;
 
+import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
+import exceptions.SimultaneousOperationException;
 import org.junit.jupiter.api.Test;
 import structures.Ticket;
 import vehicles.Car;
@@ -18,12 +20,11 @@ public class ParkingLotGetTicketIntegrationTest
     public static final boolean VIP = true;
 
     @Test
-    public void getParkingTicket() throws ParkingSpotNotFoundException
-    {
+    public void getParkingTicket() throws ParkingSpotNotFoundException, SimultaneousOperationException {
         // Fiecare test are cumva prestabilite (alegem dinainte) ce tip de vehicul, cate locuri de parcare etc. si verificam ca am primit ce am asteptat
 
         // 1) Given (preconditiile testului - trebuie sa le avem ca sa putem executa testul)
-        ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator());
+        ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), new ParkingSpotsCollection());
         Vehicle vehicle = new Car(COLOR, PRICE, NON_ELECTRIC);
         Driver driver = new Driver(NAME, vehicle, VIP);
 

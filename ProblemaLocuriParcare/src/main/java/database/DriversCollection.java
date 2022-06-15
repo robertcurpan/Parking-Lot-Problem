@@ -9,10 +9,10 @@ import vehicles.*;
 import java.util.Objects;
 
 public class DriversCollection {
-    private static MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("drivers");
+    private MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("drivers");
     // In the collection, we will have a driverId and another document that contains the info of a driver.
 
-    public static Driver getDriverById(int driverId) {
+    public Driver getDriverById(int driverId) {
         Document document = collection.find(Filters.eq("driverId", driverId)).first();
 
         String driverName = (String) document.get("name");
@@ -34,11 +34,11 @@ public class DriversCollection {
         return new Driver(driverName, vehicle, isDriverVIP);
     }
 
-    public static void removeDriverById(int driverId) {
+    public void removeDriverById(int driverId) {
         collection.deleteOne(Filters.eq("driverId", driverId));
     }
 
-    public static void addDriver(int driverId, Driver driver) {
+    public void addDriver(int driverId, Driver driver) {
         Document vehicleDocument = new Document();
         vehicleDocument.append("type", driver.getVehicle().getVehicleType());
         vehicleDocument.append("color", driver.getVehicle().getColor());

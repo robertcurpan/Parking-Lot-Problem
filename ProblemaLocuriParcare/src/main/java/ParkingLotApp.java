@@ -1,6 +1,7 @@
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
+import exceptions.SimultaneousOperationException;
 import parking.*;
 import structures.Ticket;
 import vehicles.*;
@@ -27,6 +28,7 @@ public class ParkingLotApp
     private JTextField textField_pret;
     private JComboBox comboBox_electric;
     private JButton button_showAllParkingSpots;
+    private ParkingSpotsCollection parkingSpotsCollection;
     private ParkingLotService parkingLotService;
 
 
@@ -79,16 +81,15 @@ public class ParkingLotApp
 
             Driver driver = new Driver(name, vehicle, vipStatus);
 
-            try
-            {
+            try {
                 Ticket ticket = parkingLotService.getParkingTicket(driver);
 
                 // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
                 textArea_info.append("The driver " + driver.toString() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
-            }
-            catch(ParkingSpotNotFoundException ex)
-            {
+            } catch (ParkingSpotNotFoundException ex) {
                 textArea_info.append("There is no free parking spot available!\r\n");
+            } catch (SimultaneousOperationException simultaneousOperationException) {
+                textArea_info.append("Operation failed! Please try again!\r\n");
             }
 
         }
@@ -96,7 +97,8 @@ public class ParkingLotApp
 
     public ParkingLotApp() {
 
-        parkingLotService = new ParkingLotService(new TicketGeneratorCreator());
+        parkingSpotsCollection = new ParkingSpotsCollection();
+        parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), parkingSpotsCollection);
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override
@@ -116,6 +118,8 @@ public class ParkingLotApp
                     textArea_info.append("The driver: " + driver.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")\r\n");
                 } catch (ParkingSpotNotOccupiedException ex) {
                     textArea_info.append("The spot with id: " + idParkingSpot + " is not occupied!" + "\r\n");
+                } catch (SimultaneousOperationException simultaneousOperationException) {
+                    textArea_info.append("Operation failed! Please try again!\r\n");
                 }
             }
         });
@@ -129,15 +133,15 @@ public class ParkingLotApp
                 ans.append("\r\n");
 
 
-                HashMap<Integer, Driver> drivers = ParkingSpotsCollection.getDrivers();
+                HashMap<Integer, Driver> drivers = parkingSpotsCollection.getDrivers();
                 for (HashMap.Entry<Integer, Driver> entry : drivers.entrySet()) {
                     ans.append(entry.getValue().toString()).append(" -> parking slot: ").append(entry.getKey().toString()).append("\r\n");
                 }
                 ans.append("\r\n");
                 ans.append("-----> Number of free parking spots left: \r\n");
-                ans.append("Motorcycle: ").append(ParkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.MOTORCYCLE)).append(" free spots.\r\n");
-                ans.append("Car: ").append(ParkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.CAR)).append(" free spots.\r\n");
-                ans.append("Truck: ").append(ParkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.TRUCK)).append(" free spots.\r\n");
+                ans.append("Motorcycle: ").append(parkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.MOTORCYCLE)).append(" free spots.\r\n");
+                ans.append("Car: ").append(parkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.CAR)).append(" free spots.\r\n");
+                ans.append("Truck: ").append(parkingSpotsCollection.getNumberOfEmptySpotsForVehicleType(VehicleType.TRUCK)).append(" free spots.\r\n");
                 String text = ans.toString();
 
                 textArea_info.append(text);
@@ -151,7 +155,7 @@ public class ParkingLotApp
             StringBuilder ans = new StringBuilder();
             ans.append("\r\n");
 
-            ArrayList<ParkingSpot> parkingSpots = ParkingSpotsCollection.getParkingSpots();
+            ArrayList<ParkingSpot> parkingSpots = parkingSpotsCollection.getParkingSpots();
             for (ParkingSpot parkingSpot : parkingSpots) {
                 ans.append(parkingSpot.getId()).append(" [").append(parkingSpot.getSpotType()).append("]").append(" -> eletric: ").append(parkingSpot.hasElectricCharger()).append("\r\n");
             }

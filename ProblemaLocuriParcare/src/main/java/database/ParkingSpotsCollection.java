@@ -4,6 +4,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
+import exceptions.SimultaneousOperationException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import parking.Driver;
@@ -14,9 +16,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ParkingSpotsCollection {
-    private static MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("parkingSpotInputs");
+    private MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("parkingSpotInputs");
+    private DriversCollection driversCollection = new DriversCollection();
 
-    public static Driver getDriverAssignedToParkingSpot(int idParkingSpot) {
+    public Driver getDriverAssignedToParkingSpot(int idParkingSpot) {
         Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
         Bson filterFree = Filters.eq("free", false);
         Document document = collection.find(Filters.and(filterId, filterFree)).first();
@@ -26,10 +29,10 @@ public class ParkingSpotsCollection {
 
         // Daca nu s-a aruncat o exceptie, inseamna ca s-a gasit locul de parcare cu id-ul dat (si e ocupat -> exista un driver acolo)
         int driverId = (int) document.get("driverId");
-        return DriversCollection.getDriverById(driverId);
+        return driversCollection.getDriverById(driverId);
     }
 
-    public static void makeParkingSpotFree(int idParkingSpot) {
+    public void makeParkingSpotFree(int idParkingSpot) throws SimultaneousOperationException {
         // Trebuie sa facem locul "free" (eliberam locul de parcare)
         Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
         Document parkingSpotDocument = collection.find(filterId).first();
@@ -37,16 +40,23 @@ public class ParkingSpotsCollection {
             throw new RuntimeException();
         }
 
-        collection.updateOne(Filters.eq("parkingSpotId", idParkingSpot), Updates.set("free", true));
+        // Citim versiunea documentului ca sa vedem daca putem facem modificari
+        // Daca versiunea citita nu e aceeasi cu versiunea curenta (din momentul in care se face modificarea - update - atunci aruncam o exceptie)
+        int version = (int) parkingSpotDocument.get("version");
+
+        Bson filterParkingSpotId = Filters.eq("parkingSpotId", idParkingSpot);
+        Bson filterVersion = Filters.eq("version", version);
 
         // Eliminam driver-ul aferent din colectia cu driveri.
         int driverId = (int) parkingSpotDocument.get("driverId");
-        DriversCollection.removeDriverById(driverId);
+        driversCollection.removeDriverById(driverId);
 
-        collection.updateOne(Filters.eq("parkingSpotId", idParkingSpot), Updates.set("driverId", null));
+        UpdateResult updateResult = collection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", true), Updates.set("driverId", null), Updates.set("version", version + 1)));
+        if(updateResult.getMatchedCount() == 0)
+            throw new SimultaneousOperationException();
     }
 
-    public static void occupyParkingSpot(int idParkingSpot, Driver driver) {
+    public void occupyParkingSpot(int idParkingSpot, Driver driver) throws SimultaneousOperationException {
         Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
         Document parkingSpotDocument = collection.find(filterId).first();
         if(parkingSpotDocument == null) {
@@ -54,17 +64,20 @@ public class ParkingSpotsCollection {
         }
 
         int driverId = idParkingSpot + 7;
-
-        // Ocup locul de parcare
-        collection.updateOne(Filters.eq("parkingSpotId", idParkingSpot), Updates.set("free", false));
-        // Asignez un driver id soferului care urmeaza sa parcheze aici (vom considera acelasi cu idParkingSpot)
-        collection.updateOne(Filters.eq("parkingSpotId", idParkingSpot), Updates.set("driverId", driverId));
+        int version = (int) parkingSpotDocument.get("version");
+        Bson filterParkingSpotId = Filters.eq("parkingSpotId", idParkingSpot);
+        Bson filterVersion = Filters.eq("version", version);
 
         // Adaug soferul in colectia cu soferi
-        DriversCollection.addDriver(driverId, driver);
+        driversCollection.addDriver(driverId, driver);
+
+        // Ocup locul de parcare, asignez un driver id soferului care urmeaza sa parcheze aici (vom considera acelasi cu idParkingSpot)
+        UpdateResult updateResult = collection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", false), Updates.set("driverId", driverId), Updates.set("version", version + 1)));
+        if(updateResult.getMatchedCount() == 0)
+            throw new SimultaneousOperationException();
     }
 
-    public static int getParkingSpotId(VehicleType vehicleType, boolean electric) {
+    public int getParkingSpotId(VehicleType vehicleType, boolean electric) {
         String vehicleTypeString = "";
         if(vehicleType == VehicleType.MOTORCYCLE) {
             vehicleTypeString = "Motorcycle";
@@ -93,12 +106,10 @@ public class ParkingSpotsCollection {
         // Am gasit un parking spot cu cerintele cautate (daca n-am gasit, se arunca runtime exception)
         int parkingSpotId = (int) parkingSpotDocument.get("parkingSpotId");
 
-
-
         return parkingSpotId;
     }
 
-    public static ArrayList<ParkingSpot> getParkingSpots() {
+    public ArrayList<ParkingSpot> getParkingSpots() {
         ArrayList<ParkingSpot> parkingSpots = new ArrayList<>();
 
         MongoCursor<Document> cursor = collection.find().iterator();
@@ -130,7 +141,7 @@ public class ParkingSpotsCollection {
         return parkingSpots;
     }
 
-    public static HashMap<Integer, Driver> getDrivers() {
+    public HashMap<Integer, Driver> getDrivers() {
         HashMap<Integer, Driver> drivers = new HashMap<>();
 
         // Luam locurile ocupate (unde soferii si-au parcat vehiculele)
@@ -139,7 +150,7 @@ public class ParkingSpotsCollection {
             Document currentDocument = cursor.next();
             int parkingSpotId = (int) currentDocument.get("parkingSpotId");
             int driverId = (int) currentDocument.get("driverId");
-            Driver driver = DriversCollection.getDriverById(driverId);
+            Driver driver = driversCollection.getDriverById(driverId);
 
             drivers.put(parkingSpotId, driver);
         }
@@ -147,7 +158,7 @@ public class ParkingSpotsCollection {
         return drivers;
     }
 
-    public static int getNumberOfEmptySpotsForVehicleType(VehicleType vehicleType) {
+    public int getNumberOfEmptySpotsForVehicleType(VehicleType vehicleType) {
         String vehicleTypeString = "";
         if (vehicleType == VehicleType.MOTORCYCLE) {
             vehicleTypeString = "Motorcycle";
