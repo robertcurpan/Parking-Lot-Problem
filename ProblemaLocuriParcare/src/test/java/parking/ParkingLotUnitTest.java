@@ -27,26 +27,18 @@ public class ParkingLotUnitTest {
         TicketGenerator ticketGenerator = mock(TicketGenerator.class);
         Ticket ticketMock = mock(Ticket.class);
 
-        Map<VehicleType, Integer> noOfExistingSpotsForVehicleType = new HashMap<>();
-        noOfExistingSpotsForVehicleType.put(VehicleType.MOTORCYCLE, 2);
-        Map<VehicleType, Integer> emptySpotsNumber = new HashMap<>();
-        emptySpotsNumber.put(VehicleType.MOTORCYCLE, 2);
-        Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots = new HashMap<>();
-        parkingSpots.put(VehicleType.MOTORCYCLE, new ArrayList<>(Arrays.asList(new ParkingSpot(0, VehicleType.MOTORCYCLE, true, true), new ParkingSpot(1, VehicleType.MOTORCYCLE, true, true))));
-        Map<Integer, Driver> assignedParkingSpots = new HashMap<>();
-        ParkingLot parkingLot =  new ParkingLot(noOfExistingSpotsForVehicleType, emptySpotsNumber, parkingSpots, assignedParkingSpots); // colectii hardcodate
         ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator);
         Driver driver = new Driver("Andrei", new Motorcycle("pink", 2000, true), false);
 
         when(ticketGeneratorCreator.getTicketGenerator(driver)).thenReturn(ticketGenerator);
-        when(ticketGenerator.getTicket(parkingLot, driver)).thenReturn(ticketMock);
+        when(ticketGenerator.getTicket(driver)).thenReturn(ticketMock);
 
         // When
-        Ticket ticket = parkingLotService.getParkingTicket(parkingLot, driver);
+        Ticket ticket = parkingLotService.getParkingTicket(driver);
 
         // Then
         verify(ticketGeneratorCreator).getTicketGenerator(driver); // verific ca atunci cand se apeleaza getParkingTicket apeleaza metoda getTicketGenerator
-        verify(ticketGenerator).getTicket(parkingLot, driver);
+        verify(ticketGenerator).getTicket(driver);
     }
 
     @Test
@@ -55,19 +47,10 @@ public class ParkingLotUnitTest {
         TicketGeneratorCreator ticketGeneratorCreator = mock(TicketGeneratorCreator.class);
         TicketGenerator ticketGenerator = mock(TicketGenerator.class);
 
-        Map<VehicleType, Integer> noOfExistingSpotsForVehicleType = new HashMap<>();
-        noOfExistingSpotsForVehicleType.put(VehicleType.MOTORCYCLE, 2);
-        Map<VehicleType, Integer> emptySpotsNumber = new HashMap<>();
-        emptySpotsNumber.put(VehicleType.MOTORCYCLE, 2);
-        Map<VehicleType, ArrayList<ParkingSpot>> parkingSpots = new HashMap<>();
-        parkingSpots.put(VehicleType.MOTORCYCLE, new ArrayList<>(Arrays.asList(new ParkingSpot(0, VehicleType.MOTORCYCLE, true, true), new ParkingSpot(1, VehicleType.MOTORCYCLE, true, true))));
-        Map<Integer, Driver> assignedParkingSpots = new HashMap<>();
-
-        ParkingLot parkingLot =  new ParkingLot(noOfExistingSpotsForVehicleType, emptySpotsNumber, parkingSpots, assignedParkingSpots); // colectii hardcodate
         ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator);
         Driver driver = new Driver("Andrei", new Car("pink", 2000, true), true);
 
         // When, Then
-        assertThrowsExactly(ParkingSpotNotOccupiedException.class, () -> parkingLotService.leaveParkingLot(parkingLot, 0));
+        assertThrowsExactly(ParkingSpotNotOccupiedException.class, () -> parkingLotService.leaveParkingLot(0));
     }
 }

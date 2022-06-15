@@ -1,11 +1,8 @@
 package strategy;
 
 import exceptions.ParkingSpotNotFoundException;
-import input.ReadInputFromFile;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import parking.Driver;
-import parking.ParkingLot;
 import structures.Ticket;
 import vehicles.Motorcycle;
 import vehicles.Truck;
@@ -16,15 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class VIPRegularTicketGeneratorUnitTest {
-    ParkingLot parkingLot;
-    ReadInputFromFile readInputFromFile;
-
-    @BeforeEach
-    public void initializeParkingLot() {
-        readInputFromFile = new ReadInputFromFile();
-        parkingLot = readInputFromFile.initializeAndGetParkingLot();
-    }
-
     @Test
     public void getSpotFromTheNextParkingSpotCategories() throws ParkingSpotNotFoundException {
         // Given
@@ -38,16 +26,16 @@ public class VIPRegularTicketGeneratorUnitTest {
         Ticket ticket;
 
         // When
-        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        ticket = ticketGenerator.getTicket(driver);
         assertEquals(2, ticket.getSpotId());
 
-        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        ticket = ticketGenerator.getTicket(driver);
         assertEquals(1, ticket.getSpotId());
 
-        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        ticket = ticketGenerator.getTicket(driver);
         assertEquals(3, ticket.getSpotId());
 
-        ticket = ticketGenerator.getTicket(parkingLot, driver);
+        ticket = ticketGenerator.getTicket(driver);
         assertEquals(8, ticket.getSpotId());
     }
 
@@ -60,7 +48,7 @@ public class VIPRegularTicketGeneratorUnitTest {
 
         TicketGenerator ticketGenerator = new VIPRegularTicketGenerator();
 
-        Ticket ticket = ticketGenerator.getTicket(parkingLot, driver);
-        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingLot, driver));
+        Ticket ticket = ticketGenerator.getTicket(driver);
+        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(driver));
     }
 }

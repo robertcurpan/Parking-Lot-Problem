@@ -1,10 +1,10 @@
 package parking;
 
+import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import strategy.TicketGenerator;
 import structures.Ticket;
-import vehicles.VehicleType;
 
 public class ParkingLotService {
 
@@ -12,41 +12,24 @@ public class ParkingLotService {
 
     public ParkingLotService(TicketGeneratorCreator ticketGeneratorCreator) {
         this.ticketGeneratorCreator = ticketGeneratorCreator;
+        // argument ParkingSpotsCollection
     }
 
-    public Ticket getParkingTicket(ParkingLot parkingLot, Driver driver) throws ParkingSpotNotFoundException
-    {
+    public Ticket getParkingTicket(Driver driver) throws ParkingSpotNotFoundException {
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(driver);
-
-        // In urma apelului, vehicleTypeId nu mai este neaparat acelasi. Avand in vedere ca un sofer poate fi VIP, s-ar putea asigna un loc de parcare de la o categorie superioada
-        // Trebuie sa folosim valoarea noua (care se actualizeaza in functia getTicket) si aici pt a actualiza nr de locuri libere.
-
-        Ticket ticket = ticketGenerator.getTicket(parkingLot, driver);
-
+        Ticket ticket = ticketGenerator.getTicket(driver);
         return ticket;
     }
 
-
-    public Driver leaveParkingLot(ParkingLot parkingLot, int idParkingSpot) throws ParkingSpotNotOccupiedException
-    {
-        if (!parkingLot.getAssignedParkingSpots().containsKey(idParkingSpot))
+    public Driver leaveParkingLot(int idParkingSpot) throws ParkingSpotNotOccupiedException {
+        try {
+            Driver driver = ParkingSpotsCollection.getDriverAssignedToParkingSpot(idParkingSpot);
+            ParkingSpotsCollection.makeParkingSpotFree(idParkingSpot);
+            return driver;
+        } catch (RuntimeException ex) {
             throw new ParkingSpotNotOccupiedException();
-
-        // Eliberam locul de parcare
-        Driver driver = freeEmptySpot(parkingLot, idParkingSpot);
-
-        return driver;
-    }
-
-    public Driver freeEmptySpot(ParkingLot parkingLot, int idParkingSpot) throws ParkingSpotNotOccupiedException {
-        for(ParkingSpot parkingSpot : parkingLot.getParkingSpots()) {
-            if(parkingSpot.getId() == idParkingSpot) {
-                // Am gasit locul de parcare ce trebuie eliberat
-                return parkingLot.releaseParkingSpot(parkingSpot);
-            }
         }
 
-        throw new ParkingSpotNotOccupiedException();
     }
 
 }

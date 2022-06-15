@@ -16,6 +16,9 @@ public abstract class Vehicle
     }
 
     public int getType() { return type; }
+    public String getVehicleType() { return VehicleType.values()[type].toString(); }
+    public int getPrice() { return price; }
+    public String getColor() { return color; }
     public boolean isElectric() { return electric; }
     public abstract String getDescription();
 }
