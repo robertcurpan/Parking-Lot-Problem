@@ -5,7 +5,9 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
-import exceptions.SimultaneousOperationException;
+import exceptions.ParkingSpotNotFoundException;
+import exceptions.ParkingSpotNotOccupiedException;
+import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import parking.Driver;
@@ -15,92 +17,72 @@ import vehicles.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
+/*
+!!! Functiile din baza de date trebuie sa stie doar de operatii CRUD. Noile valori in cazul unui update (sau valorile in cazul unui insert) sunt preluate din obiectele date ca parametru
+ */
 public class ParkingSpotsCollection {
-    private MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("parkingSpotInputs");
-    private DriversCollection driversCollection = new DriversCollection();
+    private MongoCollection<Document> parkingSpotsCollection;
 
-    public Driver getDriverAssignedToParkingSpot(int idParkingSpot) {
-        Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
-        Bson filterFree = Filters.eq("free", false);
-        Document document = collection.find(Filters.and(filterId, filterFree)).first();
-        if(document == null) {
-            throw new RuntimeException();
-        }
-
-        // Daca nu s-a aruncat o exceptie, inseamna ca s-a gasit locul de parcare cu id-ul dat (si e ocupat -> exista un driver acolo)
-        int driverId = (int) document.get("driverId");
-        return driversCollection.getDriverById(driverId);
+    public ParkingSpotsCollection(Database database) {
+        parkingSpotsCollection = database.getDatabase().getCollection("parkingSpotInputs");
     }
 
-    public void makeParkingSpotFree(int idParkingSpot) throws SimultaneousOperationException {
+    public int getDriverIdForOccupiedSpot(ParkingSpot parkingSpot) throws ParkingSpotNotOccupiedException {
+        Bson filterId = Filters.eq("parkingSpotId", parkingSpot.getId());
+        Document document = parkingSpotsCollection.find(filterId).first();
+        return (int) document.get("driverId");
+    }
+
+    // Preiau starea obiectului parkingSpot (care reprezinta starea finala) si actualizez in baza de date folosind aceasta stare
+    public void updateParkingSpotFreeStatus(ParkingSpot parkingSpot) throws SimultaneousOperationInDatabaseCollectionException, ParkingSpotNotFoundException {
         // Trebuie sa facem locul "free" (eliberam locul de parcare)
-        Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
-        Document parkingSpotDocument = collection.find(filterId).first();
+        Bson filterId = Filters.eq("parkingSpotId", parkingSpot.getId());
+        Document parkingSpotDocument = parkingSpotsCollection.find(filterId).first();
         if(parkingSpotDocument == null) {
-            throw new RuntimeException();
+            throw new ParkingSpotNotFoundException();
         }
 
         // Citim versiunea documentului ca sa vedem daca putem facem modificari
         // Daca versiunea citita nu e aceeasi cu versiunea curenta (din momentul in care se face modificarea - update - atunci aruncam o exceptie)
         int version = (int) parkingSpotDocument.get("version");
 
-        Bson filterParkingSpotId = Filters.eq("parkingSpotId", idParkingSpot);
+        Bson filterParkingSpotId = Filters.eq("parkingSpotId", parkingSpot.getId());
         Bson filterVersion = Filters.eq("version", version);
 
-        // Eliminam driver-ul aferent din colectia cu driveri.
-        int driverId = (int) parkingSpotDocument.get("driverId");
-        driversCollection.removeDriverById(driverId);
-
-        UpdateResult updateResult = collection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", true), Updates.set("driverId", null), Updates.set("version", version + 1)));
+        UpdateResult updateResult = parkingSpotsCollection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", parkingSpot.isFree()), Updates.set("driverId", null), Updates.set("version", version + 1)));
         if(updateResult.getMatchedCount() == 0)
-            throw new SimultaneousOperationException();
+            throw new SimultaneousOperationInDatabaseCollectionException();
+
     }
 
-    public void occupyParkingSpot(int idParkingSpot, Driver driver) throws SimultaneousOperationException {
-        Bson filterId = Filters.eq("parkingSpotId", idParkingSpot);
-        Document parkingSpotDocument = collection.find(filterId).first();
+    public void updateParkingSpotWhenDriverParks(ParkingSpot parkingSpot, Driver driver) throws SimultaneousOperationInDatabaseCollectionException, ParkingSpotNotFoundException {
+        Bson filterId = Filters.eq("parkingSpotId", parkingSpot.getId());
+        Document parkingSpotDocument = parkingSpotsCollection.find(filterId).first();
         if(parkingSpotDocument == null) {
-            throw new RuntimeException();
+            throw new ParkingSpotNotFoundException();
         }
 
-        int driverId = idParkingSpot + 7;
+        driver.setId(parkingSpot.getId() + 7);
         int version = (int) parkingSpotDocument.get("version");
-        Bson filterParkingSpotId = Filters.eq("parkingSpotId", idParkingSpot);
+        Bson filterParkingSpotId = Filters.eq("parkingSpotId", parkingSpot.getId());
         Bson filterVersion = Filters.eq("version", version);
-
-        // Adaug soferul in colectia cu soferi
-        driversCollection.addDriver(driverId, driver);
 
         // Ocup locul de parcare, asignez un driver id soferului care urmeaza sa parcheze aici (vom considera acelasi cu idParkingSpot)
-        UpdateResult updateResult = collection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", false), Updates.set("driverId", driverId), Updates.set("version", version + 1)));
+        UpdateResult updateResult = parkingSpotsCollection.updateOne(Filters.and(filterParkingSpotId, filterVersion), Updates.combine(Updates.set("free", parkingSpot.isFree()), Updates.set("driverId", driver.getId()), Updates.set("version", version + 1)));
         if(updateResult.getMatchedCount() == 0)
-            throw new SimultaneousOperationException();
+            throw new SimultaneousOperationInDatabaseCollectionException();
+
     }
 
-    public int getParkingSpotId(VehicleType vehicleType, boolean electric) {
-        String vehicleTypeString = "";
-        if(vehicleType == VehicleType.MOTORCYCLE) {
-            vehicleTypeString = "Motorcycle";
-        } else if (vehicleType == VehicleType.CAR) {
-            vehicleTypeString = "Car";
-        } else if (vehicleType == VehicleType.TRUCK) {
-            vehicleTypeString = "Truck";
-        }
-
-        String electricString = "";
-        if(electric) {
-            electricString = "electric";
-        } else {
-            electricString = "nonelectric";
-        }
-
-        Bson vehicleTypeFilter = Filters.eq("parkingSpotVehicleType", vehicleTypeString);
-        Bson electricFilter = Filters.eq("parkingSpotType", electricString);
+    public int getParkingSpotId(VehicleType vehicleType, boolean electric) throws ParkingSpotNotFoundException {
+        Bson vehicleTypeFilter = Filters.eq("parkingSpotVehicleType", vehicleType.getVehicleTypeName());
+        Bson electricFilter = Filters.eq("parkingSpotType", electric ? "electric" : "nonelectric");
         Bson freeFilter = Filters.eq("free", true);
 
-        Document parkingSpotDocument = collection.find(Filters.and(vehicleTypeFilter, electricFilter, freeFilter)).first();
+        Document parkingSpotDocument = parkingSpotsCollection.find(Filters.and(vehicleTypeFilter, electricFilter, freeFilter)).first();
         if(parkingSpotDocument == null) {
-            throw new RuntimeException();
+            throw new ParkingSpotNotFoundException();
         }
 
         // Am gasit un parking spot cu cerintele cautate (daca n-am gasit, se arunca runtime exception)
@@ -112,7 +94,7 @@ public class ParkingSpotsCollection {
     public ArrayList<ParkingSpot> getParkingSpots() {
         ArrayList<ParkingSpot> parkingSpots = new ArrayList<>();
 
-        MongoCursor<Document> cursor = collection.find().iterator();
+        MongoCursor<Document> cursor = this.parkingSpotsCollection.find().iterator();
         while(cursor.hasNext()) {
             Document currentDocument = cursor.next();
             int spotId = (int) currentDocument.get("parkingSpotId");
@@ -126,14 +108,7 @@ public class ParkingSpotsCollection {
             }
 
             String parkingSpotVehicleType = (String) currentDocument.get("parkingSpotVehicleType");
-            VehicleType spotVehicleType = null;
-            if (parkingSpotVehicleType.equals("Motorcycle")) {
-                spotVehicleType = VehicleType.MOTORCYCLE;
-            } else if (parkingSpotVehicleType.equals("Car")) {
-                spotVehicleType = VehicleType.CAR;
-            } else if (parkingSpotVehicleType.equals("Truck")) {
-                spotVehicleType = VehicleType.TRUCK;
-            }
+            VehicleType spotVehicleType = VehicleType.getVehicleTypeByName(parkingSpotVehicleType);
 
             parkingSpots.add(new ParkingSpot(spotId, spotVehicleType, free, electric));
         }
@@ -141,37 +116,137 @@ public class ParkingSpotsCollection {
         return parkingSpots;
     }
 
-    public HashMap<Integer, Driver> getDrivers() {
-        HashMap<Integer, Driver> drivers = new HashMap<>();
+    public HashMap<Integer, Driver> getDriversAndCorrespondingParkingSpot(ArrayList<Driver> drivers) {
+        HashMap<Integer, Driver> driversAndCorrespondingSpot = new HashMap<>();
 
         // Luam locurile ocupate (unde soferii si-au parcat vehiculele)
-        MongoCursor<Document> cursor = collection.find(Filters.eq("free", false)).iterator();
+        MongoCursor<Document> cursor = parkingSpotsCollection.find(Filters.eq("free", false)).iterator();
         while(cursor.hasNext()) {
             Document currentDocument = cursor.next();
             int parkingSpotId = (int) currentDocument.get("parkingSpotId");
             int driverId = (int) currentDocument.get("driverId");
-            Driver driver = driversCollection.getDriverById(driverId);
-
-            drivers.put(parkingSpotId, driver);
+            for(Driver driver : drivers) {
+                if (driver.getId() == driverId) {
+                    driversAndCorrespondingSpot.put(parkingSpotId, driver);
+                    break;
+                }
+            }
         }
 
-        return drivers;
+        return driversAndCorrespondingSpot;
     }
 
     public int getNumberOfEmptySpotsForVehicleType(VehicleType vehicleType) {
-        String vehicleTypeString = "";
-        if (vehicleType == VehicleType.MOTORCYCLE) {
-            vehicleTypeString = "Motorcycle";
-        } else if (vehicleType == VehicleType.CAR) {
-            vehicleTypeString = "Car";
-        } else if (vehicleType == VehicleType.TRUCK) {
-            vehicleTypeString = "Truck";
-        }
+        String vehicleTypeString = vehicleType.getVehicleTypeName();
 
         Bson vehicleTypeFilter = Filters.eq("parkingSpotVehicleType", vehicleTypeString);
         Bson freeFilter = Filters.eq("free", true);
-        int numberOfEmptySpots = (int) collection.countDocuments(Filters.and(vehicleTypeFilter, freeFilter));
+        int numberOfEmptySpots = (int) parkingSpotsCollection.countDocuments(Filters.and(vehicleTypeFilter, freeFilter));
         return numberOfEmptySpots;
+    }
+
+    public ParkingSpot getParkingSpotById(int parkingSpotId) throws ParkingSpotNotFoundException {
+        Bson filterId = Filters.eq("parkingSpotId", parkingSpotId);
+        Document parkingSpotDocument = parkingSpotsCollection.find(filterId).first();
+        if(parkingSpotDocument == null) {
+            throw new ParkingSpotNotFoundException();
+        }
+
+        String vehicleTypeString = (String) parkingSpotDocument.get("parkingSpotVehicleType");
+        String electricString = (String) parkingSpotDocument.get("parkingSpotType");
+        boolean free = (boolean) parkingSpotDocument.get("free");
+        VehicleType vehicleType = VehicleType.getVehicleTypeByName(vehicleTypeString);
+        boolean electric = electricString.equals("electric");
+
+        return new ParkingSpot(parkingSpotId, vehicleType, free, electric);
+    }
+
+    public void initializeParkingSpotsCollection() {
+        Document document1 = new Document();
+        document1.append("parkingSpotId", 7);
+        document1.append("parkingSpotType", "electric");
+        document1.append("parkingSpotVehicleType", "Motorcycle");
+        document1.append("free", true);
+        document1.append("driverId", null);
+        document1.append("version", 1);
+
+        Document document2 = new Document();
+        document2.append("parkingSpotId", 2);
+        document2.append("parkingSpotType", "nonelectric");
+        document2.append("parkingSpotVehicleType", "Motorcycle");
+        document2.append("free", true);
+        document2.append("driverId", null);
+        document2.append("version", 1);
+
+        Document document3 = new Document();
+        document3.append("parkingSpotId", 1);
+        document3.append("parkingSpotType", "nonelectric");
+        document3.append("parkingSpotVehicleType", "Car");
+        document3.append("free", true);
+        document3.append("driverId", null);
+        document3.append("version", 1);
+
+        Document document4 = new Document();
+        document4.append("parkingSpotId", 3);
+        document4.append("parkingSpotType", "nonelectric");
+        document4.append("parkingSpotVehicleType", "Car");
+        document4.append("free", true);
+        document4.append("driverId", null);
+        document4.append("version", 1);
+
+        Document document5 = new Document();
+        document5.append("parkingSpotId", 9);
+        document5.append("parkingSpotType", "electric");
+        document5.append("parkingSpotVehicleType", "Car");
+        document5.append("free", true);
+        document5.append("driverId", null);
+        document5.append("version", 1);
+
+        Document document6 = new Document();
+        document6.append("parkingSpotId", 6);
+        document6.append("parkingSpotType", "electric");
+        document6.append("parkingSpotVehicleType", "Truck");
+        document6.append("free", true);
+        document6.append("driverId", null);
+        document6.append("version", 1);
+
+        Document document7 = new Document();
+        document7.append("parkingSpotId", 5);
+        document7.append("parkingSpotType", "electric");
+        document7.append("parkingSpotVehicleType", "Truck");
+        document7.append("free", true);
+        document7.append("driverId", null);
+        document7.append("version", 1);
+
+        Document document8 = new Document();
+        document8.append("parkingSpotId", 8);
+        document8.append("parkingSpotType", "nonelectric");
+        document8.append("parkingSpotVehicleType", "Truck");
+        document8.append("free", true);
+        document8.append("driverId", null);
+        document8.append("version", 1);
+
+        Document document9 = new Document();
+        document9.append("parkingSpotId", 4);
+        document9.append("parkingSpotType", "electric");
+        document9.append("parkingSpotVehicleType", "Truck");
+        document9.append("free", true);
+        document9.append("driverId", null);
+        document9.append("version", 1);
+
+        parkingSpotsCollection.insertOne(document1);
+        parkingSpotsCollection.insertOne(document2);
+        parkingSpotsCollection.insertOne(document3);
+        parkingSpotsCollection.insertOne(document4);
+        parkingSpotsCollection.insertOne(document5);
+        parkingSpotsCollection.insertOne(document6);
+        parkingSpotsCollection.insertOne(document7);
+        parkingSpotsCollection.insertOne(document8);
+        parkingSpotsCollection.insertOne(document9);
+    }
+    public void resetParkingSpotsCollection() {
+        // Delete all documents from "parkingSpotInputs" collection
+        parkingSpotsCollection.deleteMany(new Document());
     }
 
 

@@ -4,20 +4,14 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 public class Database {
-    private static Database instance;
     private MongoDatabase mongoDatabase;
-    private Database() {
+
+    public Database(String databaseName) {
         MongoClient mongoClient = new MongoClient();
-        mongoDatabase = mongoClient.getDatabase("parkingLotDB");
+        mongoDatabase = mongoClient.getDatabase(databaseName);
     }
 
-    public static Database getInstance() {
-        if(instance == null)
-            return new Database();
-        return instance;
-    }
-
-    public MongoDatabase getParkingLotDB() {
+    public MongoDatabase getDatabase() {
         return mongoDatabase;
     }
 }

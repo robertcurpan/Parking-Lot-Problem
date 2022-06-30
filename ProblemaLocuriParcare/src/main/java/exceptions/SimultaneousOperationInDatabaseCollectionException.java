@@ -1,13 +1,13 @@
 package exceptions;
 
-public class SimultaneousOperationException extends Exception {
+public class SimultaneousOperationInDatabaseCollectionException extends Exception {
     private String message;
-    public SimultaneousOperationException()
+    public SimultaneousOperationInDatabaseCollectionException()
     {
         message = "Another request was sent at the same time!";
     }
 
-    public SimultaneousOperationException(String message)
+    public SimultaneousOperationInDatabaseCollectionException(String message)
     {
         this.message = message;
     }

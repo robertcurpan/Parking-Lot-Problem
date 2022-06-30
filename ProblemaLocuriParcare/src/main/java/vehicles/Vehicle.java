@@ -21,4 +21,13 @@ public abstract class Vehicle
     public String getColor() { return color; }
     public boolean isElectric() { return electric; }
     public abstract String getDescription();
+
+    @Override
+    public boolean equals(Object object) {
+        if(object instanceof Vehicle) {
+            Vehicle vehicle = (Vehicle) object;
+            return this.type.equals(vehicle.type) && this.color.equals(vehicle.color) && this.price == vehicle.price && this.electric == vehicle.electric;
+        }
+        return false;
+    }
 }

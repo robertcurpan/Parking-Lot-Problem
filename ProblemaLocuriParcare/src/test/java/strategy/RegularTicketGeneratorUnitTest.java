@@ -1,6 +1,9 @@
 package strategy;
 
+import database.DriversCollection;
+import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
+import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import org.junit.jupiter.api.Test;
 import parking.Driver;
 import structures.Ticket;
@@ -13,8 +16,10 @@ import static org.mockito.Mockito.when;
 
 public class RegularTicketGeneratorUnitTest {
     @Test
-    public void throwExceptionWhenNoSpotIsAvailable() throws ParkingSpotNotFoundException {
+    public void throwExceptionWhenNoSpotIsAvailable() throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
         // Given
+        ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
+        DriversCollection driversCollection = mock(DriversCollection.class);
         Driver driver = mock(Driver.class);
         when(driver.getVipStatus()).thenReturn(false);
         when(driver.getVehicle()).thenReturn(new Car("blue", 2000, false));
@@ -23,12 +28,15 @@ public class RegularTicketGeneratorUnitTest {
         Ticket ticket;
 
         // When
-        ticket = ticketGenerator.getTicket(driver);
+        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(1);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
         assertEquals(1, ticket.getSpotId());
 
-        ticket = ticketGenerator.getTicket(driver);
+        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(3);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
         assertEquals(3, ticket.getSpotId());
 
-        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(driver));
+        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenThrow(new ParkingSpotNotFoundException());
+        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingSpotsCollection, driver));
     }
 }

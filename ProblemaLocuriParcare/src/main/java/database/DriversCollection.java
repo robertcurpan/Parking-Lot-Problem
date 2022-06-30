@@ -1,19 +1,28 @@
 package database;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
+import exceptions.DriverNotFoundException;
 import org.bson.Document;
 import parking.Driver;
 import vehicles.*;
 
-import java.util.Objects;
+import java.util.ArrayList;
 
 public class DriversCollection {
-    private MongoCollection<Document> collection = Database.getInstance().getParkingLotDB().getCollection("drivers");
+    private MongoCollection<Document> driversCollection;
     // In the collection, we will have a driverId and another document that contains the info of a driver.
 
-    public Driver getDriverById(int driverId) {
-        Document document = collection.find(Filters.eq("driverId", driverId)).first();
+    public DriversCollection(Database database) {
+        driversCollection = database.getDatabase().getCollection("drivers");
+    }
+
+    public Driver getDriverById(int driverId) throws DriverNotFoundException {
+        Document document = driversCollection.find(Filters.eq("driverId", driverId)).first();
+        if (document == null) {
+            throw new DriverNotFoundException();
+        }
 
         String driverName = (String) document.get("name");
         boolean isDriverVIP = (boolean) document.get("vipStatus");
@@ -31,14 +40,16 @@ public class DriversCollection {
             case TRUCK: vehicle = new Truck(vehicleColor, vehiclePrice, vehicleElectric); break;
         }
 
-        return new Driver(driverName, vehicle, isDriverVIP);
+        Driver driver = new Driver(driverName, vehicle, isDriverVIP);
+        driver.setId(driverId);
+        return driver;
     }
 
-    public void removeDriverById(int driverId) {
-        collection.deleteOne(Filters.eq("driverId", driverId));
+    public void removeDriver(Driver driver) {
+        driversCollection.deleteOne(Filters.eq("driverId", driver.getId()));
     }
 
-    public void addDriver(int driverId, Driver driver) {
+    public void addDriver(Driver driver) {
         Document vehicleDocument = new Document();
         vehicleDocument.append("type", driver.getVehicle().getVehicleType());
         vehicleDocument.append("color", driver.getVehicle().getColor());
@@ -46,12 +57,32 @@ public class DriversCollection {
         vehicleDocument.append("electric", driver.getVehicle().isElectric());
 
         Document driverDocument = new Document();
-        driverDocument.append("driverId", driverId);
+        driverDocument.append("driverId", driver.getId());
         driverDocument.append("name", driver.getName());
         driverDocument.append("vehicle", vehicleDocument);
         driverDocument.append("vipStatus", driver.getVipStatus());
 
-        collection.insertOne(driverDocument);
+        driversCollection.insertOne(driverDocument);
+    }
+
+    public ArrayList<Driver> getAllDrivers() throws DriverNotFoundException {
+        ArrayList<Driver> drivers = new ArrayList<>();
+
+        // Luam toti driverii din colectie (daca sunt in colectie, inseamna ca au parcat)
+        MongoCursor<Document> cursor = driversCollection.find().iterator();
+        while(cursor.hasNext()) {
+            Document currentDocument = cursor.next();
+            int driverId = (int) currentDocument.get("driverId");
+            Driver driver = getDriverById(driverId);
+
+            drivers.add(driver);
+        }
+
+        return drivers;
+    }
+
+    public void resetDriversCollection() {
+        driversCollection.deleteMany(new Document());
     }
 
 }

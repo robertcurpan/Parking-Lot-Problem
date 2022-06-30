@@ -1,13 +1,14 @@
 package strategy;
 
+import database.DriversCollection;
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
-import exceptions.SimultaneousOperationException;
+import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import parking.Driver;
 import structures.Ticket;
 
 // Part of Strategy design patter
 public interface TicketGenerator
 {
-    Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Driver d) throws ParkingSpotNotFoundException, SimultaneousOperationException;
+    Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Driver driver) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException;
 }
