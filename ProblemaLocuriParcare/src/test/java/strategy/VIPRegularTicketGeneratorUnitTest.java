@@ -1,14 +1,17 @@
 package strategy;
 
-import database.DriversCollection;
+import database.VehiclesCollection;
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import org.junit.jupiter.api.Test;
 import parking.Driver;
+import parking.ParkingSpotType;
 import structures.Ticket;
 import vehicles.Motorcycle;
 import vehicles.Truck;
+import vehicles.Vehicle;
+import vehicles.VehicleType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -20,29 +23,31 @@ public class VIPRegularTicketGeneratorUnitTest {
     public void getSpotFromTheNextParkingSpotCategories() throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        DriversCollection driversCollection = mock(DriversCollection.class);
+        Vehicle vehicle = mock(Vehicle.class);
         Driver driver = mock(Driver.class);
-        when(driver.getVipStatus()).thenReturn(true);
-        when(driver.getVehicle()).thenReturn(new Motorcycle("blue", 2000, false));
+        when(vehicle.getDriver()).thenReturn(driver);
+        when(vehicle.getElectric()).thenReturn(false);
+        when(vehicle.getDriver().getVipStatus()).thenReturn(true);
+        when(vehicle.getVehicleType()).thenReturn(VehicleType.MOTORCYCLE);
 
         TicketGenerator ticketGenerator = new VIPRegularTicketGenerator();
         Ticket ticket;
 
         // When
-        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(2);
-        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(2);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(2, ticket.getSpotId());
 
-        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(1);
-        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(1);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(1, ticket.getSpotId());
 
-        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(3);
-        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(3);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(3, ticket.getSpotId());
 
-        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenReturn(8);
-        ticket = ticketGenerator.getTicket(parkingSpotsCollection, driver);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(8);
+        ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(8, ticket.getSpotId());
     }
 
@@ -50,14 +55,16 @@ public class VIPRegularTicketGeneratorUnitTest {
     public void throwExceptionWhenThereIsNoSpotAvailable() throws ParkingSpotNotFoundException {
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        DriversCollection driversCollection = mock(DriversCollection.class);
+        Vehicle vehicle = mock(Vehicle.class);
         Driver driver = mock(Driver.class);
-        when(driver.getVipStatus()).thenReturn(true);
-        when(driver.getVehicle()).thenReturn(new Truck("blue", 2000, false));
+        when(vehicle.getDriver()).thenReturn(driver);
+        when(vehicle.getElectric()).thenReturn(false);
+        when(vehicle.getDriver().getVipStatus()).thenReturn(true);
+        when(vehicle.getVehicleType()).thenReturn(VehicleType.TRUCK);
 
         TicketGenerator ticketGenerator = new VIPRegularTicketGenerator();
 
-        when(parkingSpotsCollection.getParkingSpotId(driver.getVehicle().getType(), false)).thenThrow(new ParkingSpotNotFoundException());
-        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingSpotsCollection, driver));
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenThrow(new ParkingSpotNotFoundException());
+        assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingSpotsCollection, vehicle));
     }
 }

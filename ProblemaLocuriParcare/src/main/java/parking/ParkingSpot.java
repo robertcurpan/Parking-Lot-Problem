@@ -5,32 +5,34 @@ import vehicles.VehicleType;
 public class ParkingSpot
 {
     private int id;
-    private VehicleType spotType; // loc pt masina, motocicleta etc.
+    private int vehicleId;
+    private ParkingSpotType spotType;
     private boolean free;
     private boolean electric;
 
-    public ParkingSpot(int id, VehicleType spotType, boolean free, boolean electric)
+    public ParkingSpot(int id, int vehicleId, ParkingSpotType spotType, boolean free, boolean electric)
     {
         this.id = id;
+        this.vehicleId = vehicleId;
         this.spotType = spotType;
         this.free = free;
         this.electric = electric;
     }
 
     public int getId() { return this.id; }
-    public boolean isFree() { return this.free; }
-    public boolean hasElectricCharger() { return this.electric; }
-    public VehicleType getSpotType() { return this.spotType; }
+    public int getVehicleId() { return this.vehicleId; }
+    public boolean getFree() { return this.free; }
+    public boolean getElectricCharger() { return this.electric; }
+    public ParkingSpotType getSpotType() { return this.spotType; }
 
-    public void setId(int id) { this.id = id; }
     public void setFree(boolean free) { this.free = free; }
     public void setElectric(boolean electric) { this.electric = electric; }
-    public void setSpotType(VehicleType spotType) { this.spotType = spotType; }
+    public void setVehicleId(int vehicleId) { this.vehicleId = vehicleId; }
 
     @Override
     public String toString()
     {
-        return "Spot with id: " + id + "[" + spotType + "] -> free: " + free + ", electric: " + electric;
+        return "Spot with id: " + id + "[" + spotType.getParkingSpotTypeName() + " (vehicleId = " + vehicleId + ") ] -> free: " + free + ", electric: " + electric;
     }
 
 }

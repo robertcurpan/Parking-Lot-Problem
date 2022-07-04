@@ -1,13 +1,13 @@
 package exceptions;
 
-public class DriverNotFoundException extends Exception {
+public class VehicleNotFoundException extends Exception {
     private String message;
-    public DriverNotFoundException()
+    public VehicleNotFoundException()
     {
-        message = "Driver not found!";
+        message = "Vehicle not found!";
     }
 
-    public DriverNotFoundException(String message)
+    public VehicleNotFoundException(String message)
     {
         this.message = message;
     }

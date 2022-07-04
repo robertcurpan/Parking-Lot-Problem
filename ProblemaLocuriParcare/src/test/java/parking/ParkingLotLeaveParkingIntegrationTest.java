@@ -1,9 +1,9 @@
 package parking;
 
 import database.Database;
-import database.DriversCollection;
+import database.VehiclesCollection;
 import database.ParkingSpotsCollection;
-import exceptions.DriverNotFoundException;
+import exceptions.VehicleNotFoundException;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
@@ -21,7 +21,7 @@ public class ParkingLotLeaveParkingIntegrationTest {
 
     private ParkingSpotsCollection parkingSpotsCollection = new ParkingSpotsCollection(database);
 
-    private DriversCollection driversCollection = new DriversCollection(database);
+    private VehiclesCollection vehiclesCollection = new VehiclesCollection(database);
 
     @BeforeEach
     void initializeDatabaseCollections() {
@@ -31,22 +31,22 @@ public class ParkingLotLeaveParkingIntegrationTest {
     @AfterEach
     void resetDatabaseCollections() {
         parkingSpotsCollection.resetParkingSpotsCollection();
-        driversCollection.resetDriversCollection();
+        vehiclesCollection.resetVehiclesCollection();
     }
 
     @Test
-    public void leaveParkingLot() throws ParkingSpotNotFoundException, ParkingSpotNotOccupiedException, SimultaneousOperationInDatabaseCollectionException, DriverNotFoundException {
+    public void leaveParkingLot() throws ParkingSpotNotFoundException, ParkingSpotNotOccupiedException, SimultaneousOperationInDatabaseCollectionException, VehicleNotFoundException {
         // 1) Given
-        ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), parkingSpotsCollection, driversCollection);
-        Vehicle vehicle = new Car("blue", 2400, false);
-        Driver driver = new Driver("Robert", vehicle, false);
+        ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), parkingSpotsCollection, vehiclesCollection);
+        Driver driver = new Driver("Robert", false);
+        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
 
         // 2) When
-        Ticket ticket = parkingLotService.getParkingTicket(driver);
-        Driver driverLeft = parkingLotService.leaveParkingLot(ticket.getSpotId());
+        Ticket ticket = parkingLotService.getParkingTicket(vehicle);
+        Vehicle vehicleLeft = parkingLotService.leaveParkingLot(ticket.getSpotId());
 
         // 3) Then
-        assertEquals(driver, driverLeft);
+        assertEquals(vehicle, vehicleLeft);
     }
 
 }

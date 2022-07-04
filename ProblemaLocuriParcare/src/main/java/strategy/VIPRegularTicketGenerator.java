@@ -1,23 +1,23 @@
 package strategy;
 
-import database.DriversCollection;
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
-import parking.Driver;
+import parking.ParkingSpotType;
 import structures.Ticket;
+import vehicles.Vehicle;
 import vehicles.VehicleType;
 
 public class VIPRegularTicketGenerator implements TicketGenerator {
     @Override
-    public Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Driver driver) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
-        int vehicleTypeId = driver.getVehicle().getType().ordinal();
-        while (vehicleTypeId < VehicleType.values().length) {
+    public Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Vehicle vehicle) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
+        int parkingSpotTypeId = ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()).ordinal();
+        while (parkingSpotTypeId < ParkingSpotType.values().length) {
             try {
-                int idParkingSpot = findEmptyNonElectricSpotOnCurrentCategory(parkingSpotsCollection, driver, vehicleTypeId);
-                return new Ticket(idParkingSpot, driver.getVehicle());
+                int idParkingSpot = findEmptyNonElectricSpotOnCurrentCategory(parkingSpotsCollection, vehicle, parkingSpotTypeId);
+                return new Ticket(idParkingSpot, vehicle);
             } catch (ParkingSpotNotFoundException exception) {
-                ++vehicleTypeId;
+                ++parkingSpotTypeId;
             }
         }
 
@@ -25,11 +25,8 @@ public class VIPRegularTicketGenerator implements TicketGenerator {
         throw new ParkingSpotNotFoundException();
     }
 
-    //TODO metoda de mai jos ar trebui apelata in serviciu (nu e ok sa lucrez cu baza de date aici)
-    //TODO de scos parametrii de la metodele strategy (parametrii colectiile)
-    public int findEmptyNonElectricSpotOnCurrentCategory(ParkingSpotsCollection parkingSpotsCollection, Driver driver, int vehicleTypeId) throws ParkingSpotNotFoundException {
-        // Caut un loc de parcare liber, cu charger electric si specific vehiculului soferului
-        int idParkingSpot = parkingSpotsCollection.getParkingSpotId(VehicleType.values()[vehicleTypeId], driver.getVehicle().isElectric());
+    public int findEmptyNonElectricSpotOnCurrentCategory(ParkingSpotsCollection parkingSpotsCollection, Vehicle vehicle, int parkingSpotTypeId) throws ParkingSpotNotFoundException {
+        int idParkingSpot = parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.values()[parkingSpotTypeId], vehicle.getElectric());
         return idParkingSpot;
     }
 

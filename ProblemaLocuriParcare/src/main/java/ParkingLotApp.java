@@ -1,10 +1,11 @@
 import database.Database;
-import database.DriversCollection;
+import database.VehiclesCollection;
 import database.ParkingSpotsCollection;
-import exceptions.DriverNotFoundException;
+import exceptions.VehicleNotFoundException;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
+import factory.VehicleCreatorGenerator;
 import parking.*;
 import structures.Ticket;
 import vehicles.*;
@@ -40,12 +41,11 @@ public class ParkingLotApp
         public void run()
         {
             String name = textField_name.getText();
-            String vehicleType = comboBox_vehicle.getSelectedItem().toString();
+            String vehicleTypeString = comboBox_vehicle.getSelectedItem().toString();
             String vip = comboBox_vip.getSelectedItem().toString();
             String color = textField_culoare.getText();
-            String electric = comboBox_electric.getSelectedItem().toString();
-
-            int price = 0;
+            String isElectric = comboBox_electric.getSelectedItem().toString();
+            int price;
             try
             {
                 price = Integer.parseInt(textField_pret.getText());
@@ -56,51 +56,35 @@ public class ParkingLotApp
                 return;
             }
 
-
             try {
                 Thread.sleep(2500);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
+            boolean vipStatus = vip.equals("Yes");
+            Driver driver = new Driver(name, vipStatus);
+            boolean electric = isElectric.equals("Yes");
+            VehicleType vehicleType = VehicleType.getVehicleTypeByName(vehicleTypeString);
 
-            boolean isElectric = false;
-            if(electric == "Yes")
-                isElectric = true;
-
-            Vehicle vehicle = null;
-            switch(vehicleType)
-            {
-                case "Motorcycle": vehicle = new Motorcycle(color, price, isElectric); break;
-                case "Car": vehicle = new Car(color, price, isElectric); break;
-                case "Truck": vehicle = new Truck(color, price, isElectric); break;
-                default: break;
-            }
-
-            boolean vipStatus = false;
-            if(vip == "Yes")
-                vipStatus = true;
-
-            Driver driver = new Driver(name, vehicle, vipStatus);
+            Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(0, driver, color, price, electric);
 
             try {
-                Ticket ticket = parkingLotService.getParkingTicket(driver);
+                Ticket ticket = parkingLotService.getParkingTicket(vehicle);
 
                 // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
-                textArea_info.append("The driver " + driver.toString() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
+                textArea_info.append(vehicle.getDescription() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
             } catch (ParkingSpotNotFoundException ex) {
                 textArea_info.append("There is no free parking spot available!\r\n");
-            } catch (
-                    SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
+            } catch (SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
                 textArea_info.append("Operation failed! Please try again!\r\n");
             }
-
         }
     }
 
     public ParkingLotApp() {
         Database database = new Database("parkingLotDB");
-        parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), new ParkingSpotsCollection(database), new DriversCollection(database));
+        parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), new ParkingSpotsCollection(database), new VehiclesCollection(database));
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override
@@ -116,17 +100,16 @@ public class ParkingLotApp
                 String idParkingSpot = textField_idParkingSpot.getText();
 
                 try {
-                    Driver driver = parkingLotService.leaveParkingLot(Integer.parseInt(idParkingSpot));
-                    textArea_info.append("The driver: " + driver.toString() + " has left the parking lot (he was on spot: " + idParkingSpot + ")\r\n");
+                    Vehicle vehicle = parkingLotService.leaveParkingLot(Integer.parseInt(idParkingSpot));
+                    textArea_info.append(vehicle.getDescription() + " has left the parking lot (it was on spot: " + idParkingSpot + ")\r\n");
                 } catch (ParkingSpotNotOccupiedException ex) {
                     textArea_info.append("The spot with id: " + idParkingSpot + " is not occupied!" + "\r\n");
-                } catch (
-                        SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
+                } catch (SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
                     textArea_info.append("Operation failed! Please try again!\r\n");
                 } catch (ParkingSpotNotFoundException parkingSpotNotFoundException) {
-                    textArea_info.append("The spot with id: " + idParkingSpot + " was not found" + "\r\n");
-                } catch (DriverNotFoundException driverNotFoundException) {
-                    textArea_info.append("Driver not found!\r\n");
+                    textArea_info.append("The spot with id: " + idParkingSpot + " was not found!" + "\r\n");
+                } catch (VehicleNotFoundException vehicleNotFoundException) {
+                    textArea_info.append("Vehicle not found!\r\n");
                 }
             }
         });
@@ -140,21 +123,21 @@ public class ParkingLotApp
                 ans.append("\r\n");
 
 
-                HashMap<Integer, Driver> drivers = null;
+                HashMap<Integer, Vehicle> vehicles = null;
                 try {
-                    drivers = parkingLotService.getDriversAndCorrespondingParkingSpots();
-                } catch (DriverNotFoundException ex) {
-                    textArea_info.append("Driver not found!\r\n");
+                    vehicles = parkingLotService.getVehiclesAndCorrespondingParkingSpots();
+                } catch (VehicleNotFoundException ex) {
+                    textArea_info.append("Vehicle not found!\r\n");
                 }
 
-                for (HashMap.Entry<Integer, Driver> entry : drivers.entrySet()) {
-                    ans.append(entry.getValue().toString()).append(" -> parking slot: ").append(entry.getKey().toString()).append("\r\n");
+                for (HashMap.Entry<Integer, Vehicle> entry : vehicles.entrySet()) {
+                    ans.append(entry.getValue().getDescription()).append(" -> parking spot: ").append(entry.getKey().toString()).append("\r\n");
                 }
                 ans.append("\r\n");
                 ans.append("-----> Number of free parking spots left: \r\n");
-                ans.append("Motorcycle: ").append(parkingLotService.getNumberOfEmptySpotsForVehicleType(VehicleType.MOTORCYCLE)).append(" free spots.\r\n");
-                ans.append("Car: ").append(parkingLotService.getNumberOfEmptySpotsForVehicleType(VehicleType.CAR)).append(" free spots.\r\n");
-                ans.append("Truck: ").append(parkingLotService.getNumberOfEmptySpotsForVehicleType(VehicleType.TRUCK)).append(" free spots.\r\n");
+                ans.append("Small: ").append(parkingLotService.getNumberOfEmptySpotsForParkingSpotType(ParkingSpotType.SMALL)).append(" free spots.\r\n");
+                ans.append("Medium: ").append(parkingLotService.getNumberOfEmptySpotsForParkingSpotType(ParkingSpotType.MEDIUM)).append(" free spots.\r\n");
+                ans.append("Large: ").append(parkingLotService.getNumberOfEmptySpotsForParkingSpotType(ParkingSpotType.LARGE)).append(" free spots.\r\n");
                 String text = ans.toString();
 
                 textArea_info.append(text);
@@ -170,7 +153,7 @@ public class ParkingLotApp
 
             ArrayList<ParkingSpot> allParkingSpots = parkingLotService.getAllParkingSpots();
             for (ParkingSpot parkingSpot : allParkingSpots) {
-                ans.append(parkingSpot.getId()).append(" [").append(parkingSpot.getSpotType()).append("]").append(" -> eletric: ").append(parkingSpot.hasElectricCharger()).append("\r\n");
+                ans.append(parkingSpot.getId()).append(" [").append(parkingSpot.getSpotType()).append("]").append(" -> eletric: ").append(parkingSpot.getElectricCharger()).append("\r\n");
             }
             String text = ans.toString();
 
@@ -192,29 +175,10 @@ public class ParkingLotApp
 }
 
 
-
 /*  TASK
 
     "Implement a parking lot management app in Java, that can generate tickets for vehicle owners based on the available spots.
     The parking lot can accept for parking motorcycles, cars and trucks. The parking spots are of three different sizes:
     small, medium and large. A regular user can park a motorcycle on a small spot, a car on a medium spot and a truck on the
     large one. A VIP user can park its vehicle on a bigger spot also if there are no available spots for that vehicle category."
- */
-
-/*  FRONTEND
-
-
- */
-
-/*  IMPLEMENTATION
-
-    Minheaps have O(log n) complexity for both insertion and deletion.
-    - We will use MinHeaps to model each category of parking lots (small, medium large). These MinHeaps will contain the
-    id(index) of the free parking spots.
-    - We will also use a HashMap that maps the parking spot id to the Parking.Driver that occupies it.
-
-    - We will have a class that represents a Parking.Driver (String name, Vehicles.VehicleType vehicleType, boolean vipStatus)
-    - We will also have a class Parking.ParkingLot that has the minheaps and the hashmap as attributes. It will also have the insertion
-    and deletion methods.
-    - We will use an Enumeration to map the vehicleType to an integer.
  */

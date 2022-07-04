@@ -1,6 +1,6 @@
 package parking;
 
-import database.DriversCollection;
+import database.VehiclesCollection;
 import database.ParkingSpotsCollection;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
@@ -8,7 +8,9 @@ import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import org.junit.jupiter.api.Test;
 import strategy.TicketGenerator;
 import structures.Ticket;
+import vehicles.Car;
 import vehicles.Motorcycle;
+import vehicles.Vehicle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
@@ -20,40 +22,41 @@ public class ParkingLotUnitTest {
     public void getCorrectParkingSpotIdAndVerifyMethodCalls() throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        DriversCollection driversCollection = mock(DriversCollection.class);
+        VehiclesCollection vehiclesCollection = mock(VehiclesCollection.class);
         TicketGeneratorCreator ticketGeneratorCreator = mock(TicketGeneratorCreator.class);
         TicketGenerator ticketGenerator = mock(TicketGenerator.class);
         Ticket ticketMock = mock(Ticket.class);
         ParkingSpot parkingSpotMock = mock(ParkingSpot.class);
 
-        ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, driversCollection);
-        Driver driver = new Driver("Andrei", new Motorcycle("pink", 2000, true), false);
+        ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, vehiclesCollection);
+        Driver driver = new Driver("Robert", false);
+        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
 
-        when(ticketGeneratorCreator.getTicketGenerator(driver)).thenReturn(ticketGenerator);
-        when(ticketGenerator.getTicket(parkingSpotsCollection, driver)).thenReturn(ticketMock);
+        when(ticketGeneratorCreator.getTicketGenerator(vehicle)).thenReturn(ticketGenerator);
+        when(ticketGenerator.getTicket(parkingSpotsCollection, vehicle)).thenReturn(ticketMock);
         when(parkingLotService.getParkingSpotById(0)).thenReturn(parkingSpotMock);
 
         // When
-        Ticket ticket = parkingLotService.getParkingTicket(driver);
+        Ticket ticket = parkingLotService.getParkingTicket(vehicle);
 
         // Then
-        verify(ticketGeneratorCreator).getTicketGenerator(driver); // verific ca atunci cand se apeleaza getParkingTicket apeleaza metoda getTicketGenerator
-        verify(ticketGenerator).getTicket(parkingSpotsCollection, driver);
-        verify(parkingSpotsCollection).updateParkingSpotWhenDriverParks(parkingSpotMock, driver);
-        verify(driversCollection).addDriver(driver);
+        verify(ticketGeneratorCreator).getTicketGenerator(vehicle); // verific ca atunci cand se apeleaza getParkingTicket apeleaza metoda getTicketGenerator
+        verify(ticketGenerator).getTicket(parkingSpotsCollection, vehicle);
+        verify(parkingSpotsCollection).updateParkingSpotWhenDriverParks(parkingSpotMock);
+        verify(vehiclesCollection).addVehicle(vehicle);
     }
 
     @Test
     public void throwExceptionWhenLeavingAFreeParkingSpot() throws ParkingSpotNotOccupiedException, ParkingSpotNotFoundException {
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        DriversCollection driversCollection = mock(DriversCollection.class);
+        VehiclesCollection vehiclesCollection = mock(VehiclesCollection.class);
         TicketGeneratorCreator ticketGeneratorCreator = mock(TicketGeneratorCreator.class);
         ParkingSpot parkingSpot = mock(ParkingSpot.class);
-        ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, driversCollection);
+        ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, vehiclesCollection);
 
         when(parkingSpotsCollection.getParkingSpotById(0)).thenReturn(parkingSpot);
-        when(parkingSpotsCollection.getDriverIdForOccupiedSpot(parkingSpot)).thenThrow(new ParkingSpotNotOccupiedException());
+        when(parkingSpot.getFree()).thenReturn(true);
 
         assertThrowsExactly(ParkingSpotNotOccupiedException.class, () -> parkingLotService.leaveParkingLot(0));
     }

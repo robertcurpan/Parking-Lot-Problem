@@ -1,13 +1,14 @@
 package parking;
 
 import strategy.*;
+import vehicles.Vehicle;
 
 public class TicketGeneratorCreator {
 
-    public TicketGenerator getTicketGenerator(Driver driver) {
+    public TicketGenerator getTicketGenerator(Vehicle vehicle) {
         // In functie de statutul soferului si de tipul masinii, stabilim strategia potrivita
-        boolean isVip = driver.getVipStatus();
-        boolean isElectric = driver.getVehicle().isElectric();
+        boolean isVip = vehicle.getDriver().getVipStatus();
+        boolean isElectric = vehicle.getElectric();
 
         if (isVip && isElectric) {
             return new VIPElectricTicketGenerator();

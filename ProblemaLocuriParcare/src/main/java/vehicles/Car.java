@@ -1,16 +1,17 @@
 package vehicles;
 
+import parking.Driver;
+
 public class Car extends Vehicle
 {
-    public Car(String color, int price, boolean electric)
+    public Car(int vehicleId, Driver driver, String color, int price, boolean electric)
     {
-        super(VehicleType.CAR, color, price, electric);
+        super(vehicleId, VehicleType.CAR, driver, color, price, electric);
     }
 
     @Override
     public String getDescription()
     {
-        String res = "The car is " + color + " and it costs " + price + " euro!";
-        return res;
+        return "The car is " + color + " and it costs " + price + " euro!" + " [Driver: " + driver.toString() + "]";
     }
 }
