@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="strategy.VIPElectricTicketGeneratorUnitTest" time="0.009" tests="2" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="strategy.VIPElectricTicketGeneratorUnitTest" time="0.03" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="sun.desktop" value="windows"/>
     <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
     <property name="java.specification.version" value="11"/>
     <property name="sun.cpu.isalist" value="amd64"/>
     <property name="sun.jnu.encoding" value="Cp1250"/>
-    <property name="java.class.path" value="C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\test-classes;C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\classes;C:\Users\robertcur\.m2\repository\org\mockito\mockito-core\4.6.0\mockito-core-4.6.0.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy\1.12.10\byte-buddy-1.12.10.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy-agent\1.12.10\byte-buddy-agent-1.12.10.jar;C:\Users\robertcur\.m2\repository\org\objenesis\objenesis\3.2\objenesis-3.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;"/>
+    <property name="java.class.path" value="C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\test-classes;C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\classes;C:\Users\robertcur\.m2\repository\org\mockito\mockito-core\4.6.0\mockito-core-4.6.0.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy\1.12.10\byte-buddy-1.12.10.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy-agent\1.12.10\byte-buddy-agent-1.12.10.jar;C:\Users\robertcur\.m2\repository\org\objenesis\objenesis\3.2\objenesis-3.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\robertcur\.m2\repository\org\mongodb\mongo-java-driver\3.12.10\mongo-java-driver-3.12.10.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.13.3\jackson-databind-2.13.3.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.13.3\jackson-annotations-2.13.3.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.13.3\jackson-core-2.13.3.jar;"/>
     <property name="java.vm.vendor" value="Oracle Corporation"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="user.variant" value=""/>
@@ -18,9 +18,9 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-11.0.15\bin"/>
-    <property name="sun.java.command" value="C:\Users\ROBERT~1\AppData\Local\Temp\surefire15262034846933988640\surefirebooter13770298259448521919.jar C:\Users\robertcur\AppData\Local\Temp\surefire15262034846933988640 2022-06-07T17-33-50_766-jvmRun1 surefire12222590114848862083tmp surefire_01245455314929736963tmp"/>
+    <property name="sun.java.command" value="C:\Users\ROBERT~1\AppData\Local\Temp\surefire3168926398250717939\surefirebooter15729263272272517252.jar C:\Users\robertcur\AppData\Local\Temp\surefire3168926398250717939 2022-07-06T10-23-06_816-jvmRun1 surefire17285956923710058689tmp surefire_010733915242970312404tmp"/>
     <property name="jdk.debug" value="release"/>
-    <property name="surefire.test.class.path" value="C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\test-classes;C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\classes;C:\Users\robertcur\.m2\repository\org\mockito\mockito-core\4.6.0\mockito-core-4.6.0.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy\1.12.10\byte-buddy-1.12.10.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy-agent\1.12.10\byte-buddy-agent-1.12.10.jar;C:\Users\robertcur\.m2\repository\org\objenesis\objenesis\3.2\objenesis-3.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;"/>
+    <property name="surefire.test.class.path" value="C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\test-classes;C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare\target\classes;C:\Users\robertcur\.m2\repository\org\mockito\mockito-core\4.6.0\mockito-core-4.6.0.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy\1.12.10\byte-buddy-1.12.10.jar;C:\Users\robertcur\.m2\repository\net\bytebuddy\byte-buddy-agent\1.12.10\byte-buddy-agent-1.12.10.jar;C:\Users\robertcur\.m2\repository\org\objenesis\objenesis\3.2\objenesis-3.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\robertcur\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\robertcur\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\robertcur\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\robertcur\.m2\repository\org\mongodb\mongo-java-driver\3.12.10\mongo-java-driver-3.12.10.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.13.3\jackson-databind-2.13.3.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.13.3\jackson-annotations-2.13.3.jar;C:\Users\robertcur\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.13.3\jackson-core-2.13.3.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="C:\Users\robertcur"/>
     <property name="user.language" value="en"/>
@@ -34,7 +34,7 @@
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
-    <property name="surefire.real.class.path" value="C:\Users\ROBERT~1\AppData\Local\Temp\surefire15262034846933988640\surefirebooter13770298259448521919.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\ROBERT~1\AppData\Local\Temp\surefire3168926398250717939\surefirebooter15729263272272517252.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="11.0.15+8-LTS-149"/>
@@ -48,6 +48,7 @@
     <property name="localRepository" value="C:\Users\robertcur\.m2\repository"/>
     <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
     <property name="java.io.tmpdir" value="C:\Users\ROBERT~1\AppData\Local\Temp\"/>
+    <property name="idea.version" value="2022.1.1"/>
     <property name="java.version" value="11.0.15"/>
     <property name="user.dir" value="C:\Users\robertcur\Desktop\IntelliJ - Projects\Parking-Lot-Problem\ProblemaLocuriParcare"/>
     <property name="os.arch" value="amd64"/>
@@ -55,13 +56,13 @@
     <property name="java.awt.printerjob" value="sun.awt.windows.WPrinterJob"/>
     <property name="user.language.format" value="ro"/>
     <property name="sun.os.patch.level" value=""/>
-    <property name="java.library.path" value="C:\Program Files\Java\jdk-11.0.15\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Users\robertcur\AppData\Local\Microsoft\WindowsApps;C:\Users\robertcur\Downloads\apache-maven-3.8.5\bin;C:\Program Files\MongoDB\Server\5.0\bin;;."/>
+    <property name="java.library.path" value="C:\Program Files\Java\jdk-11.0.15\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\Users\robertcur\AppData\Local\Microsoft\WindowsApps;C:\Users\robertcur\Downloads\apache-maven-3.8.5\bin;C:\Program Files\MongoDB\Server\5.0\bin;;C:\Users\robertcur\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\robertcur\AppData\Roaming\npm;."/>
     <property name="java.vendor" value="Oracle Corporation"/>
     <property name="java.vm.info" value="mixed mode"/>
     <property name="java.vm.version" value="11.0.15+8-LTS-149"/>
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="55.0"/>
   </properties>
-  <testcase name="throwExceptionWhenThereIsNoSpotAvailable" classname="strategy.VIPElectricTicketGeneratorUnitTest" time="0.004"/>
-  <testcase name="getSpotFromTheNextParkingSpotCategories" classname="strategy.VIPElectricTicketGeneratorUnitTest" time="0.003"/>
+  <testcase name="throwExceptionWhenThereIsNoSpotAvailable" classname="strategy.VIPElectricTicketGeneratorUnitTest" time="0"/>
+  <testcase name="getSpotFromTheNextParkingSpotCategories" classname="strategy.VIPElectricTicketGeneratorUnitTest" time="0.029"/>
 </testsuite>

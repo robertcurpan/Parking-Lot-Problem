@@ -11,7 +11,7 @@ import vehicles.VehicleType;
 public class VIPElectricTicketGenerator implements TicketGenerator {
     @Override
     public Ticket getTicket(ParkingSpotsCollection parkingSpotsCollection, Vehicle vehicle) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
-        int parkingSpotTypeId = ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()).ordinal();
+        int parkingSpotTypeId = TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()).ordinal();
         while (parkingSpotTypeId < ParkingSpotType.values().length) {
             try {
                 int idParkingSpot = findEmptyElectricSpotOnCurrentCategory(parkingSpotsCollection, vehicle, parkingSpotTypeId);

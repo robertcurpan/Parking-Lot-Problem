@@ -4,9 +4,13 @@ import parking.Driver;
 
 public class Car extends Vehicle
 {
-    public Car(int vehicleId, Driver driver, String color, int price, boolean electric)
+    public Car() {
+        super();
+    }
+
+    public Car(Driver driver, String color, int price, boolean electric)
     {
-        super(vehicleId, VehicleType.CAR, driver, color, price, electric);
+        super(VehicleType.CAR, driver, color, price, electric);
     }
 
     @Override

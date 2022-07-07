@@ -12,7 +12,7 @@ public class TicketGeneratorCreatorUnitTest {
     @Test
     public void getNonVIPElectricTicketGenerator() {
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, true);
+        Vehicle vehicle = new Car(driver, "red", 2000, true);
         TicketGeneratorCreator ticketGeneratorCreator = new TicketGeneratorCreator();
 
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);
@@ -24,7 +24,7 @@ public class TicketGeneratorCreatorUnitTest {
     @Test
     public void getNonVIPRegularTicketGenerator() {
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
         TicketGeneratorCreator ticketGeneratorCreator = new TicketGeneratorCreator();
 
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);
@@ -36,7 +36,7 @@ public class TicketGeneratorCreatorUnitTest {
     @Test
     public void getVIPElectricTicketGenerator() {
         Driver driver = new Driver("Robert", true);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, true);
+        Vehicle vehicle = new Car(driver, "red", 2000, true);
         TicketGeneratorCreator ticketGeneratorCreator = new TicketGeneratorCreator();
 
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);
@@ -48,7 +48,7 @@ public class TicketGeneratorCreatorUnitTest {
     @Test
     public void getVIPRegularTicketGenerator() {
         Driver driver = new Driver("Robert", true);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
         TicketGeneratorCreator ticketGeneratorCreator = new TicketGeneratorCreator();
 
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);

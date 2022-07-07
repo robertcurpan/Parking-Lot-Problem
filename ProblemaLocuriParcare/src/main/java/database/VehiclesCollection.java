@@ -10,6 +10,7 @@ import parking.Driver;
 import vehicles.*;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class VehiclesCollection {
     private MongoCollection<Document> vehiclesCollection;
@@ -19,7 +20,7 @@ public class VehiclesCollection {
         vehiclesCollection = database.getDatabase().getCollection("vehicles");
     }
 
-    public Vehicle getVehicleById(int vehicleId) throws VehicleNotFoundException {
+    public Vehicle getVehicleById(UUID vehicleId) throws VehicleNotFoundException {
         Document vehicleDocument = vehiclesCollection.find(Filters.eq("vehicleId", vehicleId)).first();
         if (vehicleDocument == null) {
             throw new VehicleNotFoundException();
@@ -36,7 +37,8 @@ public class VehiclesCollection {
         boolean electric = (boolean) vehicleDocument.get("electric");
 
         Driver driver = new Driver(driverName, driverVIPStatus);
-        Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(vehicleId, driver, color, price, electric);
+        Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(driver, color, price, electric);
+        vehicle.setVehicleId(vehicleId);
 
         return vehicle;
     }
@@ -67,7 +69,7 @@ public class VehiclesCollection {
         MongoCursor<Document> cursor = vehiclesCollection.find().iterator();
         while(cursor.hasNext()) {
             Document vehicleDocument = cursor.next();
-            int vehicleId = (int) vehicleDocument.get("vehicleId");
+            UUID vehicleId = (UUID) vehicleDocument.get("vehicleId");
             Vehicle vehicle = getVehicleById(vehicleId);
 
             vehicles.add(vehicle);

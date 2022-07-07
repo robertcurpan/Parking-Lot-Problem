@@ -30,7 +30,7 @@ public class ParkingLotUnitTest {
 
         ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, vehiclesCollection);
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
 
         when(ticketGeneratorCreator.getTicketGenerator(vehicle)).thenReturn(ticketGenerator);
         when(ticketGenerator.getTicket(parkingSpotsCollection, vehicle)).thenReturn(ticketMock);
@@ -56,7 +56,7 @@ public class ParkingLotUnitTest {
         ParkingLotService parkingLotService = new ParkingLotService(ticketGeneratorCreator, parkingSpotsCollection, vehiclesCollection);
 
         when(parkingSpotsCollection.getParkingSpotById(0)).thenReturn(parkingSpot);
-        when(parkingSpot.getFree()).thenReturn(true);
+        when(parkingSpotsCollection.isParkingSpotFree(parkingSpot)).thenReturn(true);
 
         assertThrowsExactly(ParkingSpotNotOccupiedException.class, () -> parkingLotService.leaveParkingLot(0));
     }

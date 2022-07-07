@@ -22,15 +22,4 @@ public enum ParkingSpotType {
         return parkingSpotType;
     }
 
-    public static ParkingSpotType getSmallestFittingParkingSpotTypeFromVehicleType(VehicleType vehicleType) {
-        ParkingSpotType parkingSpotType = null;
-        switch(vehicleType) {
-            case MOTORCYCLE: parkingSpotType = SMALL; break;
-            case CAR: parkingSpotType = MEDIUM; break;
-            case TRUCK: parkingSpotType = LARGE; break;
-        }
-
-        return parkingSpotType;
-    }
-
 }

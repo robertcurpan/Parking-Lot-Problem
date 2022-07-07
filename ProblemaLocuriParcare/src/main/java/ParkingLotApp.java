@@ -6,15 +6,24 @@ import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import factory.VehicleCreatorGenerator;
+import org.json.JSONException;
+import org.json.JSONObject;
 import parking.*;
 import structures.Ticket;
+import utils.DeserializerUtil;
+import utils.HttpRequestCreatorUtil;
 import vehicles.*;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 
 public class ParkingLotApp
 {
@@ -33,7 +42,7 @@ public class ParkingLotApp
     private JComboBox comboBox_electric;
     private JButton button_showAllParkingSpots;
     private ParkingLotService parkingLotService;
-
+    private HttpClient httpClient;
 
     public class CustomThread extends Thread
     {
@@ -67,24 +76,32 @@ public class ParkingLotApp
             boolean electric = isElectric.equals("Yes");
             VehicleType vehicleType = VehicleType.getVehicleTypeByName(vehicleTypeString);
 
-            Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(0, driver, color, price, electric);
+            VehicleJson vehicleJson = new VehicleJson(vehicleType.toString(), driver, color, price, electric);
+            //Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(driver, color, price, electric);
 
+            HttpRequest request = HttpRequestCreatorUtil.createPostRequestWithVehicleBody("http://localhost:8080/getParkingTicket", vehicleJson);
+            HttpResponse<String> response = null;
             try {
-                Ticket ticket = parkingLotService.getParkingTicket(vehicle);
-
-                // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
-                textArea_info.append(vehicle.getDescription() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
-            } catch (ParkingSpotNotFoundException ex) {
-                textArea_info.append("There is no free parking spot available!\r\n");
-            } catch (SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
-                textArea_info.append("Operation failed! Please try again!\r\n");
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (IOException | InterruptedException e) {
+                textArea_info.append("Could not add a vehicle to the parking lot!\r\n");
             }
+
+            //Ticket ticket = parkingLotService.getParkingTicket(vehicle);
+            Ticket ticket = DeserializerUtil.getTicket(response.body());
+
+            // Daca nu am ajuns pe ramura catch (daca nu s-a aruncat o exceptie), atunci s-a gasit un loc de parcare liber
+            textArea_info.append(ticket.getVehicle().getDescription() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
         }
     }
 
     public ParkingLotApp() {
         Database database = new Database("parkingLotDB");
         parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), new ParkingSpotsCollection(database), new VehiclesCollection(database));
+        httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
 
         button_getTicket.addActionListener(new ActionListener() {
             @Override
@@ -99,39 +116,40 @@ public class ParkingLotApp
             public void actionPerformed(ActionEvent e) {
                 String idParkingSpot = textField_idParkingSpot.getText();
 
+                HttpRequest request = HttpRequestCreatorUtil.createPostRequest("http://localhost:8080/leaveParkingLot/" + idParkingSpot);
+                HttpResponse<String> response = null;
+                Vehicle vehicle = null;
                 try {
-                    Vehicle vehicle = parkingLotService.leaveParkingLot(Integer.parseInt(idParkingSpot));
+                    response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    vehicle = DeserializerUtil.getVehicleFromJsonObject(response.body());
                     textArea_info.append(vehicle.getDescription() + " has left the parking lot (it was on spot: " + idParkingSpot + ")\r\n");
-                } catch (ParkingSpotNotOccupiedException ex) {
-                    textArea_info.append("The spot with id: " + idParkingSpot + " is not occupied!" + "\r\n");
-                } catch (SimultaneousOperationInDatabaseCollectionException simultaneousOperationInDatabaseCollectionException) {
-                    textArea_info.append("Operation failed! Please try again!\r\n");
-                } catch (ParkingSpotNotFoundException parkingSpotNotFoundException) {
-                    textArea_info.append("The spot with id: " + idParkingSpot + " was not found!" + "\r\n");
-                } catch (VehicleNotFoundException vehicleNotFoundException) {
-                    textArea_info.append("Vehicle not found!\r\n");
+                } catch (IOException | InterruptedException | JSONException ex) {
+                    textArea_info.append("Did not find the vehicle!\r\n");
                 }
+
             }
         });
 
         button_showVehicles.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                textArea_info.append("\r\n--------------------");
+                HttpRequest request = HttpRequestCreatorUtil.createGetRequest("http://localhost:8080/getTickets");
+                HttpResponse<String> response = null;
+                List<Ticket> tickets = null;
+                try {
+                    response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    tickets = DeserializerUtil.getTickets(response.body());
 
+                } catch (IOException | InterruptedException ex) {
+                    textArea_info.append("Could not get vehicles!\r\n");
+                }
+
+                textArea_info.append("\r\n--------------------");
                 StringBuilder ans = new StringBuilder();
                 ans.append("\r\n");
 
-
-                HashMap<Integer, Vehicle> vehicles = null;
-                try {
-                    vehicles = parkingLotService.getVehiclesAndCorrespondingParkingSpots();
-                } catch (VehicleNotFoundException ex) {
-                    textArea_info.append("Vehicle not found!\r\n");
-                }
-
-                for (HashMap.Entry<Integer, Vehicle> entry : vehicles.entrySet()) {
-                    ans.append(entry.getValue().getDescription()).append(" -> parking spot: ").append(entry.getKey().toString()).append("\r\n");
+                for (Ticket ticket : tickets) {
+                    ans.append(ticket.getVehicle().getDescription()).append(" -> parking spot: ").append(ticket.getSpotId()).append("\r\n");
                 }
                 ans.append("\r\n");
                 ans.append("-----> Number of free parking spots left: \r\n");
@@ -142,23 +160,33 @@ public class ParkingLotApp
 
                 textArea_info.append(text);
                 textArea_info.append("--------------------\r\n");
+
             }
         });
 
         button_showAllParkingSpots.addActionListener(e -> {
-            textArea_info.append("\r\n--------------------");
+            HttpRequest request = HttpRequestCreatorUtil.createGetRequest("http://localhost:8080/getParkingSpots");
 
+            HttpResponse<String> response = null;
+            List<ParkingSpot> parkingSpots = null;
+            try {
+                response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                parkingSpots = DeserializerUtil.getParkingSpots(response.body());
+            } catch (IOException | InterruptedException ex) {
+                textArea_info.append("Could not get parking spots!\r\n");
+            }
+
+            textArea_info.append("\r\n--------------------");
             StringBuilder ans = new StringBuilder();
             ans.append("\r\n");
 
-            ArrayList<ParkingSpot> allParkingSpots = parkingLotService.getAllParkingSpots();
-            for (ParkingSpot parkingSpot : allParkingSpots) {
-                ans.append(parkingSpot.getId()).append(" [").append(parkingSpot.getSpotType()).append("]").append(" -> eletric: ").append(parkingSpot.getElectricCharger()).append("\r\n");
+            for (ParkingSpot parkingSpot : parkingSpots) {
+                ans.append(parkingSpot.getId()).append(" [").append(parkingSpot.getSpotType()).append("]").append(" -> eletric: ").append(parkingSpot.getElectric()).append("\r\n");
             }
             String text = ans.toString();
-
             textArea_info.append(text);
             textArea_info.append("--------------------\r\n");
+
         });
 
     }

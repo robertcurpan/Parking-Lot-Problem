@@ -2,19 +2,24 @@ package vehicles;
 
 import parking.Driver;
 
+import java.util.UUID;
+
 public abstract class Vehicle
 {
-    protected int vehicleId;
+    protected UUID vehicleId;
     protected VehicleType type;
     protected Driver driver;
     protected String color;
     protected int price;
     protected boolean electric;
 
+    public Vehicle() {
 
-    public Vehicle(int vehicleId, VehicleType type, Driver driver, String color, int price, boolean electric)
+    }
+
+    public Vehicle(VehicleType type, Driver driver, String color, int price, boolean electric)
     {
-        this.vehicleId = vehicleId;
+        this.vehicleId = UUID.randomUUID();
         this.type = type;
         this.driver = driver;
         this.color = color;
@@ -22,13 +27,13 @@ public abstract class Vehicle
         this.electric = electric;
     }
 
-    public int getVehicleId() { return vehicleId; }
+    public UUID getVehicleId() { return vehicleId; }
     public VehicleType getVehicleType() { return type; }
     public String getColor() { return color; }
     public int getPrice() { return price; }
     public Driver getDriver() { return driver; }
     public boolean getElectric() { return electric; }
-    public void setVehicleId(int vehicleId) { this.vehicleId = vehicleId; }
+    public void setVehicleId(UUID vehicleId) { this.vehicleId = vehicleId; }
 
     public abstract String getDescription();
     @Override

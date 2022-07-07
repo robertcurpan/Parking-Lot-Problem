@@ -7,7 +7,7 @@ import exceptions.SimultaneousOperationInDatabaseCollectionException;
 import org.junit.jupiter.api.Test;
 import parking.*;
 import structures.Ticket;
-import vehicles.Car;
+import vehicles.Motorcycle;
 import vehicles.Vehicle;
 import vehicles.VehicleType;
 
@@ -23,23 +23,19 @@ public class ElectricTicketGeneratorUnitTest {
 
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        Vehicle vehicle = mock(Vehicle.class);
-        Driver driver = mock(Driver.class);
-        when(vehicle.getDriver()).thenReturn(driver);
-        when(vehicle.getDriver().getVipStatus()).thenReturn(false);  // specificam ca driver-ul nu e VIP
-        when(vehicle.getVehicleType()).thenReturn(VehicleType.CAR); // specificam ca driver-ul are o masina electrica
+        Vehicle vehicle = new Motorcycle(new Driver("Andrei", false), "red", 2000, true);
 
         // Creat obiectul manual
         TicketGenerator ticketGenerator = new ElectricTicketGenerator();
         Ticket ticket;
 
         // When
-        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), true)).thenReturn(9);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), vehicle.getElectric())).thenReturn(9);
         ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(9, ticket.getSpotId());
 
         // getParkingSpotId() arunca RuntimeException (aceasta e prinsa in ElectricTicketGenerator si in catch se arunca ParkingSpotNotFoundException)
-        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), true)).thenThrow(new ParkingSpotNotFoundException());
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), vehicle.getElectric())).thenThrow(new ParkingSpotNotFoundException());
         assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingSpotsCollection, vehicle)); // nu mai exista locuri libere pt un sofer non-vip cu masina electrica
     }
 

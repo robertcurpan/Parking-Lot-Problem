@@ -47,7 +47,7 @@ public class ParkingLotGetTicketIntegrationTest
         // 1) Given (preconditiile testului - trebuie sa le avem ca sa putem executa testul)
         ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), parkingSpotsCollection, vehiclesCollection);
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
 
         // 2) When
         Ticket parkingTicket = parkingLotService.getParkingTicket(vehicle);

@@ -1,11 +1,14 @@
 package parking;
 
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.Filters;
 import database.VehiclesCollection;
 import database.ParkingSpotsCollection;
 import exceptions.VehicleNotFoundException;
 import exceptions.ParkingSpotNotFoundException;
 import exceptions.ParkingSpotNotOccupiedException;
 import exceptions.SimultaneousOperationInDatabaseCollectionException;
+import org.bson.Document;
 import strategy.TicketGenerator;
 import structures.Ticket;
 import vehicles.Vehicle;
@@ -13,6 +16,7 @@ import vehicles.VehicleType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 public class ParkingLotService {
 
@@ -29,10 +33,8 @@ public class ParkingLotService {
     public Ticket getParkingTicket(Vehicle vehicle) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
         TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);
         Ticket ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
-        ParkingSpot parkingSpot = getParkingSpotById(ticket.getSpotId());
-        parkingSpot.setFree(false);
-        parkingSpot.setVehicleId(ticket.getSpotId() + 7); // nu putem seta id-ul din interfata, asa ca il setam aici (mapare 1:1 dintre parkingSpotId si vehicleId)
-        vehicle.setVehicleId(parkingSpot.getVehicleId());
+        ParkingSpot parkingSpot = parkingSpotsCollection.getParkingSpotById(ticket.getSpotId());
+        parkingSpot.setVehicleId(vehicle.getVehicleId()); // nu putem seta id-ul din interfata, asa ca il setam aici (mapare 1:1 dintre parkingSpotId si vehicleId)
         parkingSpotsCollection.updateParkingSpotWhenDriverParks(parkingSpot);
         vehiclesCollection.addVehicle(vehicle);
         return ticket;
@@ -40,9 +42,8 @@ public class ParkingLotService {
 
     public Vehicle leaveParkingLot(int idParkingSpot) throws ParkingSpotNotOccupiedException, SimultaneousOperationInDatabaseCollectionException, ParkingSpotNotFoundException, VehicleNotFoundException {
         ParkingSpot parkingSpot = parkingSpotsCollection.getParkingSpotById(idParkingSpot);
-        if(!parkingSpot.getFree()) {
+        if(!parkingSpotsCollection.isParkingSpotFree(parkingSpot)) {
             Vehicle vehicle = vehiclesCollection.getVehicleById(parkingSpot.getVehicleId());
-            parkingSpot.setFree(true);
             parkingSpotsCollection.updateParkingSpotWhenDriverLeaves(parkingSpot);  // o functie din colectia bazei de date trebuie sa stie doar operatii CRUD (valorile atributelor ce trebuie actualizate le ia din obiectul dat ca parametru - parkingSpot.isFree())
             vehiclesCollection.removeVehicle(vehicle);
             return vehicle;
@@ -56,13 +57,27 @@ public class ParkingLotService {
     }
 
     public HashMap<Integer, Vehicle> getVehiclesAndCorrespondingParkingSpots() throws VehicleNotFoundException {
-        return parkingSpotsCollection.getVehiclesAndCorrespondingParkingSpots(vehiclesCollection.getAllVehicles());
+        HashMap<Integer, Vehicle> vehiclesAndCorrespondingParkingSpots = new HashMap<>();
+
+        ArrayList<Vehicle> vehicles = vehiclesCollection.getAllVehicles();
+        ArrayList<ParkingSpot> parkingSpots = parkingSpotsCollection.getParkingSpots();
+
+        for(Vehicle vehicle : vehicles) {
+            for(ParkingSpot parkingSpot : parkingSpots) {
+                if(vehicle.getVehicleId().equals(parkingSpot.getVehicleId())) {
+                    vehiclesAndCorrespondingParkingSpots.put(parkingSpot.getId(), vehicle);
+                }
+            }
+        }
+
+        return vehiclesAndCorrespondingParkingSpots;
     }
 
     public ArrayList<ParkingSpot> getAllParkingSpots() {
         return parkingSpotsCollection.getParkingSpots();
     }
 
+    // TODO - DE VAZUT
     public ParkingSpot getParkingSpotById(int parkingSpotId) throws ParkingSpotNotFoundException {
         return parkingSpotsCollection.getParkingSpotById(parkingSpotId);
     }

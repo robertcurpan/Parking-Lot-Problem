@@ -9,6 +9,7 @@ import parking.Driver;
 import parking.ParkingSpotType;
 import structures.Ticket;
 import vehicles.Car;
+import vehicles.Motorcycle;
 import vehicles.Vehicle;
 import vehicles.VehicleType;
 
@@ -22,25 +23,21 @@ public class RegularTicketGeneratorUnitTest {
     public void throwExceptionWhenNoSpotIsAvailable() throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
         // Given
         ParkingSpotsCollection parkingSpotsCollection = mock(ParkingSpotsCollection.class);
-        Vehicle vehicle = mock(Vehicle.class);
-        Driver driver = mock(Driver.class);
-        when(vehicle.getDriver()).thenReturn(driver);
-        when(vehicle.getDriver().getVipStatus()).thenReturn(false);
-        when(vehicle.getVehicleType()).thenReturn(VehicleType.CAR);
+        Vehicle vehicle = new Motorcycle(new Driver("Andrei", false), "red", 2000, false);
 
         TicketGenerator ticketGenerator = new RegularTicketGenerator();
         Ticket ticket;
 
         // When
-        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(1);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), vehicle.getElectric())).thenReturn(1);
         ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(1, ticket.getSpotId());
 
-        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenReturn(3);
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), vehicle.getElectric())).thenReturn(3);
         ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
         assertEquals(3, ticket.getSpotId());
 
-        when(parkingSpotsCollection.getIdForAvailableParkingSpot(ParkingSpotType.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), false)).thenThrow(new ParkingSpotNotFoundException());
+        when(parkingSpotsCollection.getIdForAvailableParkingSpot(TicketGeneratorUtil.getSmallestFittingParkingSpotTypeFromVehicleType(vehicle.getVehicleType()), vehicle.getElectric())).thenThrow(new ParkingSpotNotFoundException());
         assertThrowsExactly(ParkingSpotNotFoundException.class, () -> ticketGenerator.getTicket(parkingSpotsCollection, vehicle));
     }
 }

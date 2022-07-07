@@ -22,21 +22,21 @@ public class VehiclesCollectionIntegrationTest {
     @Test
     public void addDriver() throws VehicleNotFoundException {
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
 
         vehiclesCollection.addVehicle(vehicle);
 
-        assertEquals(vehicle, vehiclesCollection.getVehicleById(6));
+        assertEquals(vehicle, vehiclesCollection.getVehicleById(vehicle.getVehicleId()));
     }
 
     @Test
     public void removeDriver() throws VehicleNotFoundException {
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
 
         vehiclesCollection.addVehicle(vehicle);
-        assertEquals(vehicle, vehiclesCollection.getVehicleById(6));
+        assertEquals(vehicle, vehiclesCollection.getVehicleById(vehicle.getVehicleId()));
         vehiclesCollection.removeVehicle(vehicle);
-        assertThrowsExactly(VehicleNotFoundException.class, () -> vehiclesCollection.getVehicleById(6));
+        assertThrowsExactly(VehicleNotFoundException.class, () -> vehiclesCollection.getVehicleById(vehicle.getVehicleId()));
     }
 }

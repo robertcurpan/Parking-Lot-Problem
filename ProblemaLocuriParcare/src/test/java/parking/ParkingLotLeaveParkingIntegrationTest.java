@@ -39,7 +39,7 @@ public class ParkingLotLeaveParkingIntegrationTest {
         // 1) Given
         ParkingLotService parkingLotService = new ParkingLotService(new TicketGeneratorCreator(), parkingSpotsCollection, vehiclesCollection);
         Driver driver = new Driver("Robert", false);
-        Vehicle vehicle = new Car(6, driver, "red", 2000, false);
+        Vehicle vehicle = new Car(driver, "red", 2000, false);
 
         // 2) When
         Ticket ticket = parkingLotService.getParkingTicket(vehicle);
