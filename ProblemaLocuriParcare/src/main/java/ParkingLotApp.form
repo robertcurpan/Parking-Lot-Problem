@@ -32,9 +32,9 @@
         </constraints>
         <properties>
           <model>
-            <item value="Motorcycle"/>
-            <item value="Car"/>
-            <item value="Truck"/>
+            <item value="MOTORCYCLE"/>
+            <item value="CAR"/>
+            <item value="TRUCK"/>
           </model>
         </properties>
       </component>

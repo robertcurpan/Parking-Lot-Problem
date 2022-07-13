@@ -41,7 +41,7 @@ public class ParkingSpot
     @Override
     public String toString()
     {
-        return "Spot with id: " + id + "[" + spotType.getParkingSpotTypeName() + " (vehicleId = " + vehicleId + ") ], electric: " + electric;
+        return "Spot with id: " + id + "[" + spotType.toString() + " (vehicleId = " + vehicleId + ") ], electric: " + electric;
     }
 
 }

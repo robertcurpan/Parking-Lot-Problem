@@ -3,14 +3,13 @@ package utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import structures.ExceptionJson;
 import factory.VehicleCreatorGenerator;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import parking.Driver;
 import parking.ParkingSpot;
 import structures.Ticket;
-import vehicles.Car;
 import vehicles.Vehicle;
 import vehicles.VehicleType;
 
@@ -24,24 +23,24 @@ public class DeserializerUtil {
         return parkingSpots;
     }
 
-    public static List<Ticket> getTickets(String vehiclesJsonString) throws JsonProcessingException {
+    public static List<Ticket> getTickets(String vehiclesJsonString) {
         List<Ticket> tickets = new ArrayList<>();
         JSONArray jsonArray = new JSONArray(vehiclesJsonString);
 
         for(int index = 0; index < jsonArray.length(); ++index) {
             JSONObject ticketObject = jsonArray.getJSONObject(index);
-            int spotId = ticketObject.getInt("spotId");
-            JSONObject vehicleObject = ticketObject.getJSONObject("vehicle");
-            Vehicle vehicle = getVehicleFromJsonObject(vehicleObject.toString());
+            Ticket ticket = getTicket(ticketObject.toString());
 
-            tickets.add(new Ticket(spotId, vehicle));
+            tickets.add(ticket);
         }
 
         return tickets;
     }
 
-    public static Vehicle getVehicleFromJsonObject(String vehicleJsonString) throws JSONException {
-        JSONObject vehicleJsonObject = new JSONObject(vehicleJsonString);
+    public static Ticket getTicket(String ticketJsonString) {
+        JSONObject ticketJsonObject = new JSONObject(ticketJsonString);
+        int idParkingSpot = ticketJsonObject.getInt("spotId");
+        JSONObject vehicleJsonObject = ticketJsonObject.getJSONObject("vehicle");
 
         String driverName = vehicleJsonObject.getJSONObject("driver").getString("name");
         boolean driverVipStatus = vehicleJsonObject.getJSONObject("driver").getBoolean("vipStatus");
@@ -55,17 +54,11 @@ public class DeserializerUtil {
         Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(driver, color, price, electric);
         vehicle.setVehicleId(vehicleId);
 
-        return vehicle;
+        return new Ticket(idParkingSpot, vehicle);
     }
 
-    public static Ticket getTicket(String ticketJsonString) {
-        JSONObject ticketJsonObject = new JSONObject(ticketJsonString);
-        System.out.println(ticketJsonObject);
-
-        int parkingSpotId = ticketJsonObject.getInt("spotId");
-        JSONObject vehicleJsonObject = ticketJsonObject.getJSONObject("vehicle");
-        Vehicle vehicle = getVehicleFromJsonObject(vehicleJsonObject.toString());
-
-        return new Ticket(parkingSpotId, vehicle);
+    public static ExceptionJson getExceptionJson(String exceptionString) throws JsonProcessingException {
+        return mapper.readValue(exceptionString, ExceptionJson.class);
     }
+
 }

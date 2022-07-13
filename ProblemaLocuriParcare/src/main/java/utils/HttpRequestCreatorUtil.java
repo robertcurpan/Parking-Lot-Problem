@@ -2,7 +2,6 @@ package utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import vehicles.VehicleJson;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -16,18 +15,10 @@ public class HttpRequestCreatorUtil {
                 .build();
     }
 
-    public static HttpRequest createPostRequest(String uri) {
-        return HttpRequest.newBuilder()
-                .uri(URI.create(uri))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
-    }
-
-    public static HttpRequest createPostRequestWithVehicleBody(String uri, VehicleJson vehicleJson) {
+    public static HttpRequest createPostRequestWithBody(String uri, Object objectBody) {
         String requestBody = null;
         try {
-            requestBody = new ObjectMapper().writeValueAsString(vehicleJson);
+            requestBody = new ObjectMapper().writeValueAsString(objectBody);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

@@ -1,7 +1,6 @@
 package exceptions;
 
-public class VehicleNotFoundException extends Exception {
-    private String message;
+public class VehicleNotFoundException extends ParkingLotGeneralException {
     public VehicleNotFoundException()
     {
         message = "Vehicle not found!";

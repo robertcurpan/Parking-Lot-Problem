@@ -1,85 +1,108 @@
 package parking;
 
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.model.Filters;
-import database.VehiclesCollection;
-import database.ParkingSpotsCollection;
-import exceptions.VehicleNotFoundException;
-import exceptions.ParkingSpotNotFoundException;
-import exceptions.ParkingSpotNotOccupiedException;
-import exceptions.SimultaneousOperationInDatabaseCollectionException;
-import org.bson.Document;
-import strategy.TicketGenerator;
+import exceptions.*;
+import requests.HttpClientWrapper;
+import requests.ParkingSpotsEndpoint;
+import requests.TicketsEndpoint;
+import structures.ParkingLotStatus;
 import structures.Ticket;
-import vehicles.Vehicle;
-import vehicles.VehicleType;
+import vehicles.VehicleJson;
 
-import java.util.ArrayList;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 
 public class ParkingLotService {
+    private HttpClientWrapper httpClientWrapper;
+    private ParkingSpotsEndpoint parkingSpotsEndpoint;
+    private TicketsEndpoint ticketsEndpoint;
 
-    private TicketGeneratorCreator ticketGeneratorCreator;
-    private ParkingSpotsCollection parkingSpotsCollection;
-    private VehiclesCollection vehiclesCollection;
-
-    public ParkingLotService(TicketGeneratorCreator ticketGeneratorCreator, ParkingSpotsCollection parkingSpotsCollection, VehiclesCollection vehiclesCollection) {
-        this.ticketGeneratorCreator = ticketGeneratorCreator;
-        this.parkingSpotsCollection = parkingSpotsCollection;
-        this.vehiclesCollection = vehiclesCollection;
+    public ParkingLotService() {
+        httpClientWrapper = new HttpClientWrapper();
+        parkingSpotsEndpoint = new ParkingSpotsEndpoint(httpClientWrapper);
+        ticketsEndpoint = new TicketsEndpoint(httpClientWrapper);
     }
 
-    public Ticket getParkingTicket(Vehicle vehicle) throws ParkingSpotNotFoundException, SimultaneousOperationInDatabaseCollectionException {
-        TicketGenerator ticketGenerator = ticketGeneratorCreator.getTicketGenerator(vehicle);
-        Ticket ticket = ticketGenerator.getTicket(parkingSpotsCollection, vehicle);
-        ParkingSpot parkingSpot = parkingSpotsCollection.getParkingSpotById(ticket.getSpotId());
-        parkingSpot.setVehicleId(vehicle.getVehicleId()); // nu putem seta id-ul din interfata, asa ca il setam aici (mapare 1:1 dintre parkingSpotId si vehicleId)
-        parkingSpotsCollection.updateParkingSpotWhenDriverParks(parkingSpot);
-        vehiclesCollection.addVehicle(vehicle);
-        return ticket;
+    public Ticket generateParkingTicket(VehicleJson vehicleJson) throws ParkingLotGeneralException {
+        doValidations(vehicleJson);
+        return ticketsEndpoint.generateParkingTicket(vehicleJson);
     }
 
-    public Vehicle leaveParkingLot(int idParkingSpot) throws ParkingSpotNotOccupiedException, SimultaneousOperationInDatabaseCollectionException, ParkingSpotNotFoundException, VehicleNotFoundException {
-        ParkingSpot parkingSpot = parkingSpotsCollection.getParkingSpotById(idParkingSpot);
-        if(!parkingSpotsCollection.isParkingSpotFree(parkingSpot)) {
-            Vehicle vehicle = vehiclesCollection.getVehicleById(parkingSpot.getVehicleId());
-            parkingSpotsCollection.updateParkingSpotWhenDriverLeaves(parkingSpot);  // o functie din colectia bazei de date trebuie sa stie doar operatii CRUD (valorile atributelor ce trebuie actualizate le ia din obiectul dat ca parametru - parkingSpot.isFree())
-            vehiclesCollection.removeVehicle(vehicle);
-            return vehicle;
+    public Ticket leaveParkingLot(ParkingSpot parkingSpot) throws ParkingLotGeneralException {
+        return parkingSpotsEndpoint.updateParkingSpotWhenVehicleLeaves(parkingSpot);
+    }
+
+    public ParkingLotStatus getParkingLotStatus() throws HttpRequestException {
+        return new ParkingLotStatus(parkingSpotsEndpoint.getParkingSpots(), ticketsEndpoint.getTickets());
+    }
+
+    public List<Ticket> getTickets() throws HttpRequestException {
+        return ticketsEndpoint.getTickets();
+    }
+
+    public List<ParkingSpot> getParkingSpots() throws HttpRequestException {
+        return parkingSpotsEndpoint.getParkingSpots();
+    }
+
+    public Map<ParkingSpotType, Integer> getNoOfEmptyParkingSpots(ParkingLotStatus parkingLotStatus) {
+        Map<ParkingSpotType, Integer> noOfEmptySpotsForAllSpotTypes = new HashMap<>();
+        for(ParkingSpotType parkingSpotType : ParkingSpotType.values()) {
+            noOfEmptySpotsForAllSpotTypes.put(parkingSpotType, 0);
         }
 
-        throw new ParkingSpotNotOccupiedException();
-    }
-
-    public int getNumberOfEmptySpotsForParkingSpotType(ParkingSpotType parkingSpotType) {
-        return parkingSpotsCollection.getNumberOfEmptySpotsForParkingSpotType(parkingSpotType);
-    }
-
-    public HashMap<Integer, Vehicle> getVehiclesAndCorrespondingParkingSpots() throws VehicleNotFoundException {
-        HashMap<Integer, Vehicle> vehiclesAndCorrespondingParkingSpots = new HashMap<>();
-
-        ArrayList<Vehicle> vehicles = vehiclesCollection.getAllVehicles();
-        ArrayList<ParkingSpot> parkingSpots = parkingSpotsCollection.getParkingSpots();
-
-        for(Vehicle vehicle : vehicles) {
-            for(ParkingSpot parkingSpot : parkingSpots) {
-                if(vehicle.getVehicleId().equals(parkingSpot.getVehicleId())) {
-                    vehiclesAndCorrespondingParkingSpots.put(parkingSpot.getId(), vehicle);
-                }
+        for(ParkingSpot parkingSpot : parkingLotStatus.getParkingSpots()) {
+            if(parkingSpot.getVehicleId() == null) {
+                Integer currentNoOfEmptySpotsForParkingSpotType = noOfEmptySpotsForAllSpotTypes.get(parkingSpot.getSpotType());
+                noOfEmptySpotsForAllSpotTypes.put(parkingSpot.getSpotType(), currentNoOfEmptySpotsForParkingSpotType + 1);
             }
         }
 
-        return vehiclesAndCorrespondingParkingSpots;
+        return noOfEmptySpotsForAllSpotTypes;
     }
 
-    public ArrayList<ParkingSpot> getAllParkingSpots() {
-        return parkingSpotsCollection.getParkingSpots();
+    public ParkingLotStatus updateParkingLotStatusAfterDriverLeaves(ParkingLotStatus parkingLotStatus, Ticket ticket) {
+        // Trebuie sa eliberam locul de parcare (scoatem vehicleId si updatam versiunea) si sa scoatem ticket-ul din lista de ticket-uri
+        for(ParkingSpot parkingSpot : parkingLotStatus.getParkingSpots()) {
+            if(parkingSpot.getId() == ticket.getSpotId()) {
+                parkingSpot.setVehicleId(null);
+                parkingSpot.setVersion(parkingSpot.getVersion() + 1);
+                break;
+            }
+        }
+
+        for(Ticket ticketIter : parkingLotStatus.getTickets()) {
+            if(ticketIter.getSpotId() == ticket.getSpotId()) {
+                parkingLotStatus.removeTicket(ticketIter);
+                break;
+            }
+        }
+
+        return parkingLotStatus;
     }
 
-    // TODO - DE VAZUT
-    public ParkingSpot getParkingSpotById(int parkingSpotId) throws ParkingSpotNotFoundException {
-        return parkingSpotsCollection.getParkingSpotById(parkingSpotId);
+    public ParkingLotStatus updateParkingLotStatusAfterDriverParks(ParkingLotStatus parkingLotStatus, Ticket ticket) {
+        // Trebuie sa adaugam un ticket in colectia de tickets si sa updatam locul de parcare (setam vehicle id, updatam versiunea)
+        for(ParkingSpot parkingSpot : parkingLotStatus.getParkingSpots()) {
+            if(parkingSpot.getId() == ticket.getSpotId()) {
+                parkingSpot.setVehicleId(ticket.getVehicle().getVehicleId());
+                parkingSpot.setVersion(parkingSpot.getVersion() + 1);
+                break;
+            }
+        }
+
+        parkingLotStatus.addTicket(ticket);
+
+        return parkingLotStatus;
     }
+
+    public void doValidations(VehicleJson vehicleJson) throws VehicleTooExpensiveException {
+        if(vehicleJson.getPrice() > 10000) {
+            throw new VehicleTooExpensiveException();
+        }
+    }
+
+
 
 }

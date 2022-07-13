@@ -1,7 +1,6 @@
 package exceptions;
 
-public class SimultaneousOperationInDatabaseCollectionException extends Exception {
-    private String message;
+public class SimultaneousOperationInDatabaseCollectionException extends ParkingLotGeneralException {
     public SimultaneousOperationInDatabaseCollectionException()
     {
         message = "Another request was sent at the same time!";

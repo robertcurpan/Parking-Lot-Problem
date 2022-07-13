@@ -1,8 +1,7 @@
 package exceptions;
 
-public class ParkingSpotNotFoundException extends Exception
+public class ParkingSpotNotFoundException extends ParkingLotGeneralException
 {
-    private String message;
     public ParkingSpotNotFoundException()
     {
         message = "Could not find a parking spot!";
