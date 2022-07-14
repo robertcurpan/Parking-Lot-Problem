@@ -6,6 +6,7 @@ import requests.ParkingSpotsEndpoint;
 import requests.TicketsEndpoint;
 import structures.ParkingLotStatus;
 import structures.Ticket;
+import vehicles.Vehicle;
 import vehicles.VehicleJson;
 
 import java.net.http.HttpClient;

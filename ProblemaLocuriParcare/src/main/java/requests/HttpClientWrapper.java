@@ -7,6 +7,7 @@ import structures.ExceptionJson;
 import structures.Ticket;
 import utils.DeserializerUtil;
 import utils.HttpRequestCreatorUtil;
+import vehicles.Vehicle;
 import vehicles.VehicleJson;
 
 import java.io.IOException;

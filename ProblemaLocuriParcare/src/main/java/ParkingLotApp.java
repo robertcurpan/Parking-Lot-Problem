@@ -62,7 +62,6 @@ public class ParkingLotApp
             VehicleType vehicleType = VehicleType.valueOf(vehicleTypeString);
             VehicleJson vehicleJson = new VehicleJson(vehicleType.toString(), driver, color, price, electric);
 
-
             Ticket ticket = null;
             boolean errorWhilePerformingOperation = true;
             try {

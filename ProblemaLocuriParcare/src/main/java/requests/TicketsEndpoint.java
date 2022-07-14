@@ -6,6 +6,7 @@ import structures.ExceptionJson;
 import structures.Ticket;
 import utils.DeserializerUtil;
 import utils.HttpRequestCreatorUtil;
+import vehicles.Vehicle;
 import vehicles.VehicleJson;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class TicketsEndpoint {
 
     public TicketsEndpoint(HttpClientWrapper httpClientWrapper) { this.httpClientWrapper = httpClientWrapper; }
 
-    public Ticket generateParkingTicket(VehicleJson vehicleJson) throws HttpRequestException, ParkingSpotNotFoundException, ParkingSpotNotAvailableException, SimultaneousOperationInDatabaseCollectionException, ParkingLotGeneralException {
+    public Ticket generateParkingTicket(VehicleJson vehicleJson) throws ParkingLotGeneralException {
         return httpClientWrapper.generateParkingTicketFromUri("http://localhost:8080/generateParkingTicket", vehicleJson);
     }
 
