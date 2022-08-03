@@ -5,7 +5,6 @@ import parking.ParkingSpotType;
 import structures.ParkingLotStatus;
 import structures.Ticket;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ public class PrinterUtil {
         parkingLotStatusString.append("\r\n--------------------");
         parkingLotStatusString.append("\r\n");
         for (Ticket ticket : tickets) {
-            parkingLotStatusString.append(ticket.getVehicle().getDescription()).append(" -> parking spot: ").append(ticket.getSpotId()).append("\r\n");
+            parkingLotStatusString.append(ticket.getVehicle().getDescription()).append(" -> parking spot: ").append(ticket.getParkingSpot().getId()).append("\r\n");
         }
         parkingLotStatusString.append("\r\n");
         parkingLotStatusString.append("-----> Number of free parking spots left: \r\n");
@@ -59,7 +58,7 @@ public class PrinterUtil {
         ticketsString.append("\r\n");
 
         for (Ticket ticket : tickets) {
-            ticketsString.append(ticket.getVehicle().getDescription()).append(" -> parking spot: ").append(ticket.getSpotId()).append("\r\n");
+            ticketsString.append(ticket.getVehicle().getDescription()).append(" -> parking spot: ").append(ticket.getParkingSpot().getId()).append("\r\n");
         }
         ticketsString.append("\r\n");
         ticketsString.append("-----> Number of free parking spots left: \r\n");

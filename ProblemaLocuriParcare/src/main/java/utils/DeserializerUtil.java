@@ -3,6 +3,7 @@ package utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import parking.ParkingSpotType;
 import structures.ExceptionJson;
 import factory.VehicleCreatorGenerator;
 import org.json.JSONArray;
@@ -39,8 +40,19 @@ public class DeserializerUtil {
 
     public static Ticket getTicket(String ticketJsonString) {
         JSONObject ticketJsonObject = new JSONObject(ticketJsonString);
-        int idParkingSpot = ticketJsonObject.getInt("spotId");
+        JSONObject parkingSpotObject = ticketJsonObject.getJSONObject("parkingSpot");
         JSONObject vehicleJsonObject = ticketJsonObject.getJSONObject("vehicle");
+
+        int parkingSpotId = parkingSpotObject.getInt("id");
+        UUID parkingSpotVehicleId = null;
+        if(!parkingSpotObject.isNull("vehicleId")) {
+            parkingSpotVehicleId = UUID.fromString(parkingSpotObject.getString("vehicleId"));
+        }
+        ParkingSpotType parkingSpotType = ParkingSpotType.valueOf(parkingSpotObject.getString("spotType"));
+        boolean parkingSpotElectric = parkingSpotObject.getBoolean("electric");
+        int version = parkingSpotObject.getInt("version");
+
+        ParkingSpot parkingSpot = new ParkingSpot(parkingSpotId, parkingSpotVehicleId, parkingSpotType, parkingSpotElectric, version);
 
         String driverName = vehicleJsonObject.getJSONObject("driver").getString("name");
         boolean driverVipStatus = vehicleJsonObject.getJSONObject("driver").getBoolean("vipStatus");
@@ -54,7 +66,7 @@ public class DeserializerUtil {
         Vehicle vehicle = VehicleCreatorGenerator.getVehicleCreator(vehicleType).getVehicle(driver, color, price, electric);
         vehicle.setVehicleId(vehicleId);
 
-        return new Ticket(idParkingSpot, vehicle);
+        return new Ticket(parkingSpot, vehicle);
     }
 
     public static ExceptionJson getExceptionJson(String exceptionString) throws JsonProcessingException {

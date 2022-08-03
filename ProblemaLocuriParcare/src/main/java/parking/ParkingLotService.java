@@ -6,11 +6,8 @@ import requests.ParkingSpotsEndpoint;
 import requests.TicketsEndpoint;
 import structures.ParkingLotStatus;
 import structures.Ticket;
-import vehicles.Vehicle;
 import vehicles.VehicleJson;
 
-import java.net.http.HttpClient;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +62,9 @@ public class ParkingLotService {
 
     public ParkingLotStatus updateParkingLotStatusAfterDriverLeaves(ParkingLotStatus parkingLotStatus, Ticket ticket) {
         // Trebuie sa eliberam locul de parcare (scoatem vehicleId si updatam versiunea) si sa scoatem ticket-ul din lista de ticket-uri
-        for(ParkingSpot parkingSpot : parkingLotStatus.getParkingSpots()) {
-            if(parkingSpot.getId() == ticket.getSpotId()) {
-                parkingSpot.setVehicleId(null);
-                parkingSpot.setVersion(parkingSpot.getVersion() + 1);
-                break;
-            }
-        }
-
+        parkingLotStatus.updateParkingSpot(ticket.getParkingSpot());
         for(Ticket ticketIter : parkingLotStatus.getTickets()) {
-            if(ticketIter.getSpotId() == ticket.getSpotId()) {
+            if(ticketIter.getParkingSpot().getId() == ticket.getParkingSpot().getId()) {
                 parkingLotStatus.removeTicket(ticketIter);
                 break;
             }
@@ -85,14 +75,7 @@ public class ParkingLotService {
 
     public ParkingLotStatus updateParkingLotStatusAfterDriverParks(ParkingLotStatus parkingLotStatus, Ticket ticket) {
         // Trebuie sa adaugam un ticket in colectia de tickets si sa updatam locul de parcare (setam vehicle id, updatam versiunea)
-        for(ParkingSpot parkingSpot : parkingLotStatus.getParkingSpots()) {
-            if(parkingSpot.getId() == ticket.getSpotId()) {
-                parkingSpot.setVehicleId(ticket.getVehicle().getVehicleId());
-                parkingSpot.setVersion(parkingSpot.getVersion() + 1);
-                break;
-            }
-        }
-
+        parkingLotStatus.updateParkingSpot(ticket.getParkingSpot());
         parkingLotStatus.addTicket(ticket);
 
         return parkingLotStatus;

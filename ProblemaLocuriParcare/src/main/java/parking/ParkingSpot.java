@@ -1,7 +1,5 @@
 package parking;
 
-import vehicles.VehicleType;
-
 import java.util.UUID;
 
 public class ParkingSpot

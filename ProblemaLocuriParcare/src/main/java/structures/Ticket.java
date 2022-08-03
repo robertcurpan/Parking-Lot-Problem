@@ -1,14 +1,15 @@
 package structures;
 
+import parking.ParkingSpot;
 import vehicles.Vehicle;
 
 public class Ticket {
-    private int spotId;
+    private ParkingSpot parkingSpot;
     private Vehicle vehicle;
 
-    public Ticket(int spotId, Vehicle vehicle) { this.spotId = spotId; this.vehicle = vehicle; }
+    public Ticket(ParkingSpot parkingSpot, Vehicle vehicle) { this.parkingSpot = parkingSpot; this.vehicle = vehicle; }
 
-    public int getSpotId() { return spotId; }
+    public ParkingSpot getParkingSpot() { return parkingSpot; }
     public Vehicle getVehicle() { return vehicle; }
     public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
 }

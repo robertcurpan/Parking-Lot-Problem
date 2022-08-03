@@ -67,7 +67,7 @@ public class ParkingLotApp
             try {
                 ticket = parkingLotService.generateParkingTicket(vehicleJson);
                 parkingLotStatus = parkingLotService.updateParkingLotStatusAfterDriverParks(parkingLotStatus, ticket);
-                textArea_info.append(ticket.getVehicle().getDescription() + " received the following parking slot: " + ticket.getSpotId() + "\r\n");
+                textArea_info.append(ticket.getVehicle().getDescription() + " received the following parking slot: " + ticket.getParkingSpot().getId() + "\r\n");
                 textArea_info.append(PrinterUtil.getParkingLotStatusString(parkingLotStatus, parkingLotService.getNoOfEmptyParkingSpots(parkingLotStatus)));
                 errorWhilePerformingOperation = false;
             } catch (ParkingSpotNotAvailableException e) {
@@ -118,7 +118,7 @@ public class ParkingLotApp
                 try {
                     ticket = parkingLotService.leaveParkingLot(parkingLotStatus.getParkingSpotById(Integer.parseInt(idParkingSpot)));
                     parkingLotStatus = parkingLotService.updateParkingLotStatusAfterDriverLeaves(parkingLotStatus, ticket);
-                    textArea_info.append(ticket.getVehicle().getDescription() + " has left the parking lot (it was on spot: " + ticket.getSpotId() + ")\r\n");
+                    textArea_info.append(ticket.getVehicle().getDescription() + " has left the parking lot (it was on spot: " + ticket.getParkingSpot().getId() + ")\r\n");
                     textArea_info.append(PrinterUtil.getParkingLotStatusString(parkingLotStatus, parkingLotService.getNoOfEmptyParkingSpots(parkingLotStatus)));
                     errorWhilePerformingOperation = false;
                 } catch (ParkingSpotNotFoundException ex) {

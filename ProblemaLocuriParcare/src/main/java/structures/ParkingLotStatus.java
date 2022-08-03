@@ -2,12 +2,7 @@ package structures;
 
 import exceptions.ParkingSpotNotFoundException;
 import parking.ParkingSpot;
-import parking.ParkingSpotType;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ParkingLotStatus {
 
@@ -38,4 +33,14 @@ public class ParkingLotStatus {
     public void addTicket(Ticket ticket) {
         tickets.add(ticket);
     }
+
+    public void updateParkingSpot(ParkingSpot parkingSpot) {
+        for(int index = 0; index < parkingSpots.size(); ++index) {
+            if(parkingSpots.get(index).getId() == parkingSpot.getId()) {
+                parkingSpots.set(index, parkingSpot);
+                break;
+            }
+        }
+    }
+
 }
